@@ -86,6 +86,7 @@ export function handleApiError(error: unknown): ApiResponse<never> {
 	}
 
 	// 不明なエラー（詳細を露出しない）
+	// biome-ignore lint/suspicious/noConsole: console.error は本番でも使用する（CLAUDE.md ルール）
 	console.error("[handleApiError] Unexpected error:", error);
 	return {
 		success: false,
@@ -109,9 +110,7 @@ function isZodError(error: unknown): boolean {
 /**
  * Supabaseエラー型ガード
  */
-function isSupabaseError(
-	error: unknown,
-): error is { code: string; message: string } {
+function isSupabaseError(error: unknown): error is { code: string; message: string } {
 	return (
 		typeof error === "object" &&
 		error !== null &&

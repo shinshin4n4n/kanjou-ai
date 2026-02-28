@@ -1,15 +1,13 @@
 import { z } from "zod";
 import { ACCOUNT_CATEGORIES, TAX_CATEGORIES } from "@/lib/utils/constants";
 
-const accountCodeSchema = z.string().refine(
-	(code) => code in ACCOUNT_CATEGORIES,
-	{ message: "無効な勘定科目コードです" },
-);
+const accountCodeSchema = z
+	.string()
+	.refine((code) => code in ACCOUNT_CATEGORIES, { message: "無効な勘定科目コードです" });
 
-const taxCategorySchema = z.string().refine(
-	(cat) => cat in TAX_CATEGORIES,
-	{ message: "無効な税区分です" },
-);
+const taxCategorySchema = z
+	.string()
+	.refine((cat) => cat in TAX_CATEGORIES, { message: "無効な税区分です" });
 
 export const createTransactionSchema = z.object({
 	transactionDate: z

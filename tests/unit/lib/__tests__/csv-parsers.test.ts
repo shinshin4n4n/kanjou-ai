@@ -1,20 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-	detectCsvFormat,
-	normalizeDate,
-	parseAmount,
-} from "@/lib/csv/parsers";
+import { detectCsvFormat, normalizeDate, parseAmount } from "@/lib/csv/parsers";
 
 describe("CSV パーサー", () => {
 	describe("detectCsvFormat", () => {
 		it("Wise形式を検出する", () => {
-			const headers = [
-				"TransferWise ID",
-				"Date",
-				"Amount",
-				"Currency",
-				"Description",
-			];
+			const headers = ["TransferWise ID", "Date", "Amount", "Currency", "Description"];
 			expect(detectCsvFormat(headers)).toBe("wise");
 		});
 

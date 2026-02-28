@@ -1,24 +1,37 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
-  "organizeImports": { "enabled": true },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "suspicious": { "noExplicitAny": "error", "noConsoleLog": "warn" },
-      "style": { "useConst": "error" },
-      "security": { "noDangerouslySetInnerHtml": "error" }
-    }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "tab",
-    "lineWidth": 100
-  },
-  "javascript": {
-    "formatter": { "quoteStyle": "double", "semicolons": "always" }
-  },
-  "files": {
-    "ignore": ["node_modules", ".next", "coverage", "playwright-report", "supabase/.temp"]
-  }
+	"$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": { "noExplicitAny": "error", "noConsole": "warn" },
+			"style": { "useConst": "error" },
+			"security": { "noDangerouslySetInnerHtml": "error" }
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"javascript": {
+		"formatter": { "quoteStyle": "double", "semicolons": "always" }
+	},
+	"files": {
+		"includes": [
+			"**",
+			"!node_modules",
+			"!.next",
+			"!coverage",
+			"!playwright-report",
+			"!supabase/.temp"
+		]
+	}
 }

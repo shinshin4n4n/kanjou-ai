@@ -1,17 +1,9 @@
 import { describe, expect, it } from "vitest";
-import {
-	API_ERROR_CODES,
-	ApiError,
-	handleApiError,
-} from "@/lib/api/error";
+import { API_ERROR_CODES, ApiError, handleApiError } from "@/lib/api/error";
 
 describe("handleApiError", () => {
 	it("ApiErrorを適切に処理する", () => {
-		const error = new ApiError(
-			API_ERROR_CODES.UNAUTHORIZED,
-			"ログインが必要です",
-			401,
-		);
+		const error = new ApiError(API_ERROR_CODES.UNAUTHORIZED, "ログインが必要です", 401);
 		const result = handleApiError(error);
 
 		expect(result.success).toBe(false);
@@ -23,9 +15,7 @@ describe("handleApiError", () => {
 
 	it("Zodエラーの詳細を漏らさない", () => {
 		const zodLikeError = {
-			issues: [
-				{ path: ["email"], message: "Invalid email" },
-			],
+			issues: [{ path: ["email"], message: "Invalid email" }],
 		};
 		const result = handleApiError(zodLikeError);
 

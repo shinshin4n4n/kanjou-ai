@@ -1,6 +1,6 @@
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
 import path from "node:path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	plugins: [react()],
@@ -25,12 +25,7 @@ export default defineConfig({
 			provider: "v8",
 			reporter: ["text", "text-summary", "json", "html"],
 			include: ["src/**/*.ts", "src/**/*.tsx"],
-			exclude: [
-				"src/types/**",
-				"src/**/*.d.ts",
-				"src/app/layout.tsx",
-				"src/app/page.tsx",
-			],
+			exclude: ["src/types/**", "src/**/*.d.ts", "src/app/layout.tsx", "src/app/page.tsx"],
 			thresholds: {
 				statements: 80,
 				branches: 75,

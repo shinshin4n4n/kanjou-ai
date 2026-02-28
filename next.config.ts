@@ -44,10 +44,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
 	// TubeReview教訓: 本番で console.log を自動削除
 	compiler: {
-		removeConsole:
-			process.env.NODE_ENV === "production"
-				? { exclude: ["error", "warn"] }
-				: false,
+		removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
 	},
 	async headers() {
 		return [
