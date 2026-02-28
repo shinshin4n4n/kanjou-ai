@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Edit",
+      "Bash(git *)", "Bash(npm *)", "Bash(npx *)",
+      "Bash(gh *)", "Bash(cat *)", "Bash(ls *)",
+      "Bash(find *)", "Bash(grep *)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)", "Bash(curl * | bash)", "Bash(sudo *)"
+    ]
+  }
+}

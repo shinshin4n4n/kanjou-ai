@@ -1,0 +1,39 @@
+name: PR Size Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  check-pr-size:
+    name: PR Size ≤ 300 lines / 10 files
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          # Count added lines (excluding auto-generated files)
+          ADDED=$(git diff --numstat "$BASE" "$HEAD" | \
+            grep -v -E '(package-lock\.json|\.snap$|\.generated\.|coverage/)' | \
+            awk '{ added += $1 } END { print added+0 }')
+
+          # Count changed files
+          FILES=$(git diff --name-only "$BASE" "$HEAD" | \
+            grep -v -E '(package-lock\.json|\.snap$)' | wc -l)
+
+          echo "Added lines: ${ADDED}, Files changed: ${FILES}"
+
+          if [ "$ADDED" -gt 300 ] || [ "$FILES" -gt 10 ]; then
+            echo "::error::PR has ${ADDED} added lines and ${FILES} files (limits: 300 lines, 10 files)."
+            echo "Please split this PR into smaller, focused changes."
+            exit 1
+          fi
+
+          echo "✅ PR size OK: ${ADDED} lines, ${FILES} files"
