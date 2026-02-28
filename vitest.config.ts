@@ -17,6 +17,8 @@ export default defineConfig({
 		include: [
 			"lib/**/__tests__/**/*.test.ts",
 			"lib/**/__tests__/**/*.test.tsx",
+			"app/**/__tests__/**/*.test.ts",
+			"app/**/__tests__/**/*.test.tsx",
 			"tests/unit/**/*.test.ts",
 			"tests/integration/**/*.test.ts",
 		],
@@ -30,8 +32,9 @@ export default defineConfig({
 				"lib/**/*.d.ts",
 				"lib/utils/constants.ts",
 				"lib/supabase/**",
-				"app/layout.tsx",
-				"app/page.tsx",
+				"app/**/page.tsx",
+				"app/**/layout.tsx",
+				"app/**/route.ts",
 			],
 			thresholds: {
 				statements: 80,
