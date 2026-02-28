@@ -53,7 +53,34 @@ CREATE POLICY "account_categories_delete_own" ON account_categories FOR DELETE
 CREATE INDEX idx_account_categories_user_id ON account_categories(user_id);
 
 -- ============================================
--- 3. 取引テーブル
+-- 3. インポート履歴テーブル
+-- ※ transactions が import_logs(id) を参照するため先に作成
+-- ============================================
+CREATE TABLE IF NOT EXISTS import_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  file_name TEXT NOT NULL,
+  file_size INT,
+  csv_format TEXT NOT NULL DEFAULT 'generic' CHECK (csv_format IN ('wise', 'revolut', 'generic')),
+  row_count INT,
+  success_count INT,
+  error_count INT,
+  status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'completed', 'failed')),
+  error_details JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE import_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "import_logs_select_own" ON import_logs FOR SELECT
+  USING (auth.uid() = user_id);
+CREATE POLICY "import_logs_insert_own" ON import_logs FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_import_logs_user_id ON import_logs(user_id);
+
+-- ============================================
+-- 4. 取引テーブル
 -- ============================================
 CREATE TABLE IF NOT EXISTS transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -94,32 +121,6 @@ CREATE POLICY "transactions_delete_own" ON transactions FOR DELETE
 CREATE INDEX idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX idx_transactions_date ON transactions(user_id, transaction_date);
 CREATE INDEX idx_transactions_confirmed ON transactions(user_id, is_confirmed);
-
--- ============================================
--- 4. インポート履歴テーブル
--- ============================================
-CREATE TABLE IF NOT EXISTS import_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  file_name TEXT NOT NULL,
-  file_size INT,
-  csv_format TEXT NOT NULL DEFAULT 'generic' CHECK (csv_format IN ('wise', 'revolut', 'generic')),
-  row_count INT,
-  success_count INT,
-  error_count INT,
-  status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'completed', 'failed')),
-  error_details JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE import_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "import_logs_select_own" ON import_logs FOR SELECT
-  USING (auth.uid() = user_id);
-CREATE POLICY "import_logs_insert_own" ON import_logs FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE INDEX idx_import_logs_user_id ON import_logs(user_id);
 
 -- ============================================
 -- 5. CSV マッピング設定（ユーザーカスタム）
