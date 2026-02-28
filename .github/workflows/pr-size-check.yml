@@ -19,14 +19,17 @@ jobs:
           BASE=${{ github.event.pull_request.base.sha }}
           HEAD=${{ github.event.pull_request.head.sha }}
 
+          # Exclude patterns for auto-generated files
+          EXCLUDE='(package-lock\.json|\.snap$|\.generated\.|coverage/|\.md$|supabase/config\.toml|lib/types/supabase\.ts)'
+
           # Count added lines (excluding auto-generated files)
           ADDED=$(git diff --numstat "$BASE" "$HEAD" | \
-            grep -v -E '(package-lock\.json|\.snap$|\.generated\.|coverage/|\.md$)' | \
+            grep -v -E "$EXCLUDE" | \
             awk '{ added += $1 } END { print added+0 }')
 
           # Count changed files
           FILES=$(git diff --name-only "$BASE" "$HEAD" | \
-            grep -v -E '(package-lock\.json|\.snap$|\.md$)' | wc -l)
+            grep -v -E "$EXCLUDE" | wc -l)
 
           echo "Added lines: ${ADDED}, Files changed: ${FILES}"
 
