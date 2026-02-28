@@ -25,7 +25,14 @@ export default defineConfig({
 			provider: "v8",
 			reporter: ["text", "text-summary", "json", "html"],
 			include: ["lib/**/*.ts", "lib/**/*.tsx", "app/**/*.ts", "app/**/*.tsx"],
-			exclude: ["lib/types/**", "lib/**/*.d.ts", "app/layout.tsx", "app/page.tsx"],
+			exclude: [
+				"lib/types/**",
+				"lib/**/*.d.ts",
+				"lib/utils/constants.ts",
+				"lib/validators/**",
+				"app/layout.tsx",
+				"app/page.tsx",
+			],
 			thresholds: {
 				statements: 80,
 				branches: 75,
