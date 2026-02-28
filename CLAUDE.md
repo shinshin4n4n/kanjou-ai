@@ -28,8 +28,6 @@
 
 ## Architecture Patterns
 
-詳細は `.claude/architecture.md` を参照してください。
-
 ### Server Actions
 
 - **配置**: `app/_actions/{domain}.ts`
@@ -49,8 +47,6 @@
 - **データ取得**: Server Actions を呼び出し
 
 ## Security
-
-詳細は `.claude/security.md` を参照してください。
 
 ### エラーハンドリング
 
@@ -144,9 +140,6 @@ const results = await classifyTransactions(transactions);
 
 ## Task Guidelines
 
-- 機能追加時: `.claude/architecture.md` を参照
-- テスト作成時: `.claude/testing.md` を参照
-- セキュリティ作業: `.claude/security.md` を参照
 - コード例: `.claude/examples.md` を参照
 - タスクチェックリスト: `.claude/task-checklists.md` を参照
 
