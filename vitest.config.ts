@@ -29,6 +29,7 @@ export default defineConfig({
 				"lib/types/**",
 				"lib/**/*.d.ts",
 				"lib/utils/constants.ts",
+				"lib/supabase/**",
 				"app/layout.tsx",
 				"app/page.tsx",
 			],
