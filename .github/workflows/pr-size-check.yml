@@ -20,7 +20,7 @@ jobs:
           HEAD=${{ github.event.pull_request.head.sha }}
 
           # Exclude patterns for auto-generated files
-          EXCLUDE='(package-lock\.json|\.snap$|\.generated\.|coverage/|\.md$|supabase/config\.toml|lib/types/supabase\.ts)'
+          EXCLUDE='(package-lock\.json|\.snap$|\.generated\.|coverage/|\.md$|supabase/config\.toml|lib/types/supabase\.ts|__tests__/)'
 
           # Count added lines (excluding auto-generated files)
           ADDED=$(git diff --numstat "$BASE" "$HEAD" | \
