@@ -31,8 +31,8 @@ export async function updateSession(request: NextRequest) {
 	} = await supabase.auth.getUser();
 
 	// 未認証ユーザーをログインページにリダイレクト
-	// 公開ページ（/, /login, /signup）はスキップ
-	const publicPaths = ["/", "/login", "/signup"];
+	// 公開ページと認証コールバックはスキップ
+	const publicPaths = ["/", "/login", "/signup", "/auth/callback"];
 	const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname === path);
 
 	if (!user && !isPublicPath) {
