@@ -6,7 +6,7 @@ export default defineConfig({
 	plugins: [react()],
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./src"),
+			"@": path.resolve(__dirname, "."),
 		},
 	},
 	test: {
@@ -15,8 +15,8 @@ export default defineConfig({
 		setupFiles: ["./tests/setup.ts"],
 		// TubeReview方式: __tests__/ ディレクトリに配置
 		include: [
-			"src/**/__tests__/**/*.test.ts",
-			"src/**/__tests__/**/*.test.tsx",
+			"lib/**/__tests__/**/*.test.ts",
+			"lib/**/__tests__/**/*.test.tsx",
 			"tests/unit/**/*.test.ts",
 			"tests/integration/**/*.test.ts",
 		],
@@ -24,8 +24,8 @@ export default defineConfig({
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "text-summary", "json", "html"],
-			include: ["src/**/*.ts", "src/**/*.tsx"],
-			exclude: ["src/types/**", "src/**/*.d.ts", "src/app/layout.tsx", "src/app/page.tsx"],
+			include: ["lib/**/*.ts", "lib/**/*.tsx", "app/**/*.ts", "app/**/*.tsx"],
+			exclude: ["lib/types/**", "lib/**/*.d.ts", "app/layout.tsx", "app/page.tsx"],
 			thresholds: {
 				statements: 80,
 				branches: 75,

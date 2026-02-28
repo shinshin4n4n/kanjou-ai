@@ -31,7 +31,8 @@
 			"!.next",
 			"!coverage",
 			"!playwright-report",
-			"!supabase/.temp"
+			"!supabase/.temp",
+			"!.claude/settings.local.json"
 		]
 	}
 }

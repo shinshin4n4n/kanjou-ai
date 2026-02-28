@@ -21,12 +21,12 @@ jobs:
 
           # Count added lines (excluding auto-generated files)
           ADDED=$(git diff --numstat "$BASE" "$HEAD" | \
-            grep -v -E '(package-lock\.json|\.snap$|\.generated\.|coverage/)' | \
+            grep -v -E '(package-lock\.json|\.snap$|\.generated\.|coverage/|\.md$)' | \
             awk '{ added += $1 } END { print added+0 }')
 
           # Count changed files
           FILES=$(git diff --name-only "$BASE" "$HEAD" | \
-            grep -v -E '(package-lock\.json|\.snap$)' | wc -l)
+            grep -v -E '(package-lock\.json|\.snap$|\.md$)' | wc -l)
 
           echo "Added lines: ${ADDED}, Files changed: ${FILES}"
 
