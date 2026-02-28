@@ -172,6 +172,16 @@ feat: プロフィール設定画面（会計年度開始月、デフォルト�
 - 推定変更ファイル数: 5ファイル
 ```
 
+### Phase 1 完了時の追加タスク
+
+Phase 1 の実装コードが揃った段階で、以下のドキュメントを実コードに基づいて作成する:
+
+- `.claude/architecture.md` — Data Flow、File Structure、Server Action/DB/Clientのパターン集
+- `.claude/security.md` — 脆弱性パターン（IDOR, Mass Assignment等）、モック例
+- `.claude/testing.md` — TDDワークフロー詳細、モックパターン集、テストコード例
+
+※実装前に書くと実態と乖離するため、Phase 1 完了後に実コードをベースに作成する。
+
 ---
 
 ## 🎨 デザイン設計セッション [半日〜1日]
