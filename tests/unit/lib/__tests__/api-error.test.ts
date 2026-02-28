@@ -75,4 +75,19 @@ describe("handleApiError", () => {
 			expect(result.code).toBe("INTERNAL_ERROR");
 		}
 	});
+
+	it("Supabaseその他DBエラーを汎用メッセージに変換する", () => {
+		const supabaseError = {
+			code: "P0001",
+			message: "internal database exception with sensitive info",
+		};
+		const result = handleApiError(supabaseError);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).toBe("データベースエラーが発生しました。");
+			expect(result.code).toBe("INTERNAL_ERROR");
+			expect(result.error).not.toContain("sensitive");
+		}
+	});
 });
