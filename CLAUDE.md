@@ -28,6 +28,8 @@
 
 ## Architecture Patterns
 
+詳細は `.claude/architecture.md` を参照してください。
+
 ### Server Actions
 
 - **配置**: `app/_actions/{domain}.ts`
@@ -48,6 +50,8 @@
 
 ## Security
 
+詳細は `.claude/security.md` を参照してください。
+
 ### エラーハンドリング
 
 - ❌ エラーレスポンスに `details`, `stack` を含めない
@@ -64,6 +68,8 @@
 - **認証チェック**: `lib/auth.ts` の `getUser()`, `requireAuth()` を使用
 
 ## Testing（TDD必須）
+
+詳細は `.claude/testing.md` を参照してください。
 
 新機能の実装は **必ず Red-Green-Refactor サイクル** に従うこと。
 
@@ -140,7 +146,9 @@ const results = await classifyTransactions(transactions);
 
 ## Task Guidelines
 
-- コード例: `.claude/examples.md` を参照
+- 機能追加時: `.claude/architecture.md` を参照
+- テスト作成時: `.claude/testing.md` を参照
+- セキュリティ作業: `.claude/security.md` を参照
 - タスクチェックリスト: `.claude/task-checklists.md` を参照
 
 ## Best Practices
