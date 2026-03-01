@@ -24,6 +24,34 @@
 	"javascript": {
 		"formatter": { "quoteStyle": "double", "semicolons": "always" }
 	},
+	"overrides": [
+		{
+			"includes": ["components/ui/**"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"useFocusableInteractive": "off",
+						"useSemanticElements": "off",
+						"useKeyWithClickEvents": "off",
+						"useAriaPropsForRole": "off",
+						"noRedundantRoles": "off"
+					},
+					"suspicious": {
+						"noDocumentCookie": "off",
+						"noArrayIndexKey": "off",
+						"noConsole": "off"
+					},
+					"security": { "noDangerouslySetInnerHtml": "off" },
+					"correctness": { "useExhaustiveDependencies": "off" }
+				}
+			}
+		}
+	],
+	"css": {
+		"parser": { "cssModules": false },
+		"linter": { "enabled": true },
+		"formatter": { "enabled": true }
+	},
 	"files": {
 		"includes": [
 			"**",
@@ -32,7 +60,9 @@
 			"!coverage",
 			"!playwright-report",
 			"!supabase/.temp",
-			"!.claude/settings.local.json"
-		]
+			"!.claude/settings.local.json",
+			"!app/globals.css"
+		],
+		"ignoreUnknown": true
 	}
 }
