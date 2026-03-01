@@ -2,26 +2,12 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTransactions } from "@/app/_actions/transaction-actions";
-import { Badge } from "@/components/ui/badge";
+import { TransactionListActions } from "@/components/transaction-list-actions";
 import { Button } from "@/components/ui/button";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 import { getUser } from "@/lib/auth";
-import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
 
 interface PageProps {
 	searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-function accountName(code: string): string {
-	const account = ACCOUNT_CATEGORIES[code as keyof typeof ACCOUNT_CATEGORIES];
-	return account?.name ?? code;
 }
 
 function buildPageHref(current: Record<string, string | undefined>, page: number): string {
@@ -77,46 +63,7 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
 					<p className="text-sm text-muted-foreground">取引がありません。</p>
 				</div>
 			) : (
-				<div className="rounded-lg border">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>日付</TableHead>
-								<TableHead>摘要</TableHead>
-								<TableHead className="text-right">金額</TableHead>
-								<TableHead>借方</TableHead>
-								<TableHead>貸方</TableHead>
-								<TableHead>状態</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{transactions.map((tx) => (
-								<TableRow key={tx.id} className="cursor-pointer">
-									<TableCell className="whitespace-nowrap">
-										<Link href={`/transactions/${tx.id}`} className="hover:underline">
-											{tx.transaction_date}
-										</Link>
-									</TableCell>
-									<TableCell>
-										<Link href={`/transactions/${tx.id}`} className="hover:underline">
-											{tx.description}
-										</Link>
-									</TableCell>
-									<TableCell className="text-right whitespace-nowrap">
-										{tx.amount.toLocaleString()}円
-									</TableCell>
-									<TableCell>{accountName(tx.debit_account)}</TableCell>
-									<TableCell>{accountName(tx.credit_account)}</TableCell>
-									<TableCell>
-										<Badge variant={tx.is_confirmed ? "default" : "secondary"}>
-											{tx.is_confirmed ? "確認済" : "未確認"}
-										</Badge>
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</div>
+				<TransactionListActions transactions={transactions} />
 			)}
 
 			{totalPages > 1 && (
