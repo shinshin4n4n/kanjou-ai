@@ -8,8 +8,10 @@ import type { ApiResponse } from "@/lib/types/api";
 import type { Tables } from "@/lib/types/supabase";
 import type { CreateTransactionInput, UpdateTransactionInput } from "@/lib/validators/transaction";
 import {
+	bulkConfirmSchema,
 	createTransactionSchema,
 	getTransactionsSchema,
+	transactionIdSchema,
 	updateTransactionSchema,
 } from "@/lib/validators/transaction";
 
@@ -154,6 +156,86 @@ export async function updateTransaction(
 
 		revalidatePath("/transactions");
 		return { success: true, data };
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function softDeleteTransaction(id: string): Promise<ApiResponse<Transaction>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const parsed = transactionIdSchema.safeParse(id);
+		if (!parsed.success) {
+			return { success: false, error: "入力内容を確認してください。", code: "VALIDATION_ERROR" };
+		}
+
+		const supabase = await createClient();
+		const { data, error } = await supabase
+			.from("transactions")
+			.update({ deleted_at: new Date().toISOString() })
+			.eq("id", parsed.data)
+			.select()
+			.single();
+
+		if (error) return handleApiError(error);
+
+		revalidatePath("/transactions");
+		return { success: true, data };
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function confirmTransaction(id: string): Promise<ApiResponse<Transaction>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const parsed = transactionIdSchema.safeParse(id);
+		if (!parsed.success) {
+			return { success: false, error: "入力内容を確認してください。", code: "VALIDATION_ERROR" };
+		}
+
+		const supabase = await createClient();
+		const { data, error } = await supabase
+			.from("transactions")
+			.update({ is_confirmed: true })
+			.eq("id", parsed.data)
+			.select()
+			.single();
+
+		if (error) return handleApiError(error);
+
+		revalidatePath("/transactions");
+		return { success: true, data };
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function bulkConfirmTransactions(ids: string[]): Promise<ApiResponse<Transaction[]>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const parsed = bulkConfirmSchema.safeParse({ ids });
+		if (!parsed.success) {
+			return { success: false, error: "入力内容を確認してください。", code: "VALIDATION_ERROR" };
+		}
+
+		const supabase = await createClient();
+		const { data, error } = await supabase
+			.from("transactions")
+			.update({ is_confirmed: true })
+			.in("id", parsed.data.ids)
+			.select();
+
+		if (error) return handleApiError(error);
+
+		revalidatePath("/transactions");
+		return { success: true, data: data ?? [] };
 	} catch (error) {
 		return handleApiError(error);
 	}
