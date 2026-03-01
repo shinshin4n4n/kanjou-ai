@@ -434,6 +434,10 @@ docs: README強化 + セキュリティ方針 + ポートフォリオ用ドキ�
 - [ ] Supabase本番プロジェクト設定
 - [ ] 環境変数の本番設定
 - [ ] OGP + メタデータ
+- [ ] Lighthouse CI 導入（lighthouserc.json + GitHub Actions ワークフロー）
+- [ ] E2E テスト導入（Playwright でクリティカルパスのテスト: ログイン→取引作成→CSVインポート→AI仕訳推定→確認/承認→エクスポート）
+- [ ] Lighthouse スコア: Performance ≥ 80, Accessibility ≥ 90, Best Practices ≥ 90
+- [ ] E2E テスト: クリティカルパス 5 シナリオ以上
 
 ## 推定サイズ
 - 推定変更行数: 300行（ドキュメント中心）
