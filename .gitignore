@@ -12,3 +12,4 @@ npm-debug.log*
 *.tsbuildinfo
 supabase/.temp/
 .claude/settings.local.json
+.vercel

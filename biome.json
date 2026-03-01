@@ -61,7 +61,8 @@
 			"!playwright-report",
 			"!supabase/.temp",
 			"!.claude/settings.local.json",
-			"!app/globals.css"
+			"!app/globals.css",
+			"!.vercel"
 		],
 		"ignoreUnknown": true
 	}
