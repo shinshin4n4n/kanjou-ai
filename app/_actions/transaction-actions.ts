@@ -1,11 +1,17 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { handleApiError } from "@/lib/api/error";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/lib/types/api";
 import type { Tables } from "@/lib/types/supabase";
-import { getTransactionsSchema } from "@/lib/validators/transaction";
+import type { CreateTransactionInput, UpdateTransactionInput } from "@/lib/validators/transaction";
+import {
+	createTransactionSchema,
+	getTransactionsSchema,
+	updateTransactionSchema,
+} from "@/lib/validators/transaction";
 
 type Transaction = Tables<"transactions">;
 
@@ -69,6 +75,101 @@ export async function getTransactions(
 				perPage,
 			},
 		};
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function createTransaction(
+	input: CreateTransactionInput,
+): Promise<ApiResponse<Transaction>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const parsed = createTransactionSchema.safeParse(input);
+		if (!parsed.success) {
+			return { success: false, error: "入力内容を確認してください。", code: "VALIDATION_ERROR" };
+		}
+
+		const supabase = await createClient();
+		const { data, error } = await supabase
+			.from("transactions")
+			.insert({
+				user_id: authResult.data.id,
+				transaction_date: parsed.data.transactionDate,
+				description: parsed.data.description,
+				amount: parsed.data.amount,
+				debit_account: parsed.data.debitAccount,
+				credit_account: parsed.data.creditAccount,
+				tax_category: parsed.data.taxCategory ?? null,
+				memo: parsed.data.memo ?? null,
+				is_confirmed: false,
+				source: "manual",
+			})
+			.select()
+			.single();
+
+		if (error) return handleApiError(error);
+
+		revalidatePath("/transactions");
+		return { success: true, data };
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function updateTransaction(
+	input: UpdateTransactionInput,
+): Promise<ApiResponse<Transaction>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const parsed = updateTransactionSchema.safeParse(input);
+		if (!parsed.success) {
+			return { success: false, error: "入力内容を確認してください。", code: "VALIDATION_ERROR" };
+		}
+
+		const { id, isConfirmed, ...fields } = parsed.data;
+		const updateData: Record<string, unknown> = {};
+		if (fields.transactionDate !== undefined) updateData.transaction_date = fields.transactionDate;
+		if (fields.description !== undefined) updateData.description = fields.description;
+		if (fields.amount !== undefined) updateData.amount = fields.amount;
+		if (fields.debitAccount !== undefined) updateData.debit_account = fields.debitAccount;
+		if (fields.creditAccount !== undefined) updateData.credit_account = fields.creditAccount;
+		if (fields.taxCategory !== undefined) updateData.tax_category = fields.taxCategory;
+		if (fields.memo !== undefined) updateData.memo = fields.memo;
+		if (isConfirmed !== undefined) updateData.is_confirmed = isConfirmed;
+
+		const supabase = await createClient();
+		const { data, error } = await supabase
+			.from("transactions")
+			.update(updateData)
+			.eq("id", id)
+			.select()
+			.single();
+
+		if (error) return handleApiError(error);
+
+		revalidatePath("/transactions");
+		return { success: true, data };
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function getTransaction(id: string): Promise<ApiResponse<Transaction>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const supabase = await createClient();
+		const { data, error } = await supabase.from("transactions").select("*").eq("id", id).single();
+
+		if (error) return handleApiError(error);
+
+		return { success: true, data };
 	} catch (error) {
 		return handleApiError(error);
 	}
