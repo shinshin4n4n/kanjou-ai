@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, LayoutDashboard, Settings } from "lucide-react";
+import { BookOpen, LayoutDashboard, List, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,6 +22,11 @@ const navItems = [
 		label: "ダッシュボード",
 		href: "/dashboard",
 		icon: LayoutDashboard,
+	},
+	{
+		label: "取引一覧",
+		href: "/transactions",
+		icon: List,
 	},
 	{
 		label: "設定",

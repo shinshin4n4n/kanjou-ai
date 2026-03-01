@@ -47,6 +47,25 @@ export const aiClassifyRequestSchema = z.object({
 
 export type AiClassifyRequestInput = z.infer<typeof aiClassifyRequestSchema>;
 
+export const getTransactionsSchema = z.object({
+	page: z.coerce.number().int().min(1).default(1),
+	perPage: z.coerce.number().int().min(1).max(100).default(20),
+	startDate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-\d{2}$/)
+		.optional(),
+	endDate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-\d{2}$/)
+		.optional(),
+	isConfirmed: z.enum(["true", "false", "all"]).default("all"),
+	accountCategory: z.string().optional(),
+	sortBy: z.enum(["transaction_date", "amount", "created_at"]).default("transaction_date"),
+	sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
+
+export type GetTransactionsInput = z.infer<typeof getTransactionsSchema>;
+
 export const exportRequestSchema = z.object({
 	format: z.enum(["yayoi", "freee", "generic"]),
 	startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
