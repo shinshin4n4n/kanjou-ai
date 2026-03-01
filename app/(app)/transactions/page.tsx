@@ -1,7 +1,9 @@
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTransactions } from "@/app/_actions/transaction-actions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Table,
 	TableBody,
@@ -57,9 +59,17 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
 
 	return (
 		<div className="flex flex-col gap-6 p-4 md:p-6">
-			<div>
-				<h1 className="text-xl font-bold tracking-tight">取引一覧</h1>
-				<p className="text-sm text-muted-foreground">{total}件の取引</p>
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="text-xl font-bold tracking-tight">取引一覧</h1>
+					<p className="text-sm text-muted-foreground">{total}件の取引</p>
+				</div>
+				<Button asChild size="sm">
+					<Link href="/transactions/new">
+						<Plus className="mr-1 size-4" />
+						新規作成
+					</Link>
+				</Button>
 			</div>
 
 			{transactions.length === 0 ? (
@@ -81,9 +91,17 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
 						</TableHeader>
 						<TableBody>
 							{transactions.map((tx) => (
-								<TableRow key={tx.id}>
-									<TableCell className="whitespace-nowrap">{tx.transaction_date}</TableCell>
-									<TableCell>{tx.description}</TableCell>
+								<TableRow key={tx.id} className="cursor-pointer">
+									<TableCell className="whitespace-nowrap">
+										<Link href={`/transactions/${tx.id}`} className="hover:underline">
+											{tx.transaction_date}
+										</Link>
+									</TableCell>
+									<TableCell>
+										<Link href={`/transactions/${tx.id}`} className="hover:underline">
+											{tx.description}
+										</Link>
+									</TableCell>
 									<TableCell className="text-right whitespace-nowrap">
 										{tx.amount.toLocaleString()}円
 									</TableCell>
