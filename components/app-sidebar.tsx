@@ -1,8 +1,9 @@
 "use client";
 
-import { BookOpen, LayoutDashboard, List, Settings } from "lucide-react";
+import { BookOpen, LayoutDashboard, List, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "@/app/_actions/auth";
 import {
 	Sidebar,
 	SidebarContent,
@@ -37,6 +38,12 @@ const navItems = [
 
 export function AppSidebar() {
 	const pathname = usePathname();
+	const router = useRouter();
+
+	async function handleSignOut() {
+		await signOut();
+		router.push("/login");
+	}
 
 	return (
 		<Sidebar collapsible="icon">
@@ -77,10 +84,15 @@ export function AppSidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
-			<SidebarFooter className="group-data-[collapsible=icon]:hidden">
-				<div className="px-2 py-3">
-					<p className="text-[10px] text-sidebar-foreground/40">KanjouAI v0.1.0</p>
-				</div>
+			<SidebarFooter>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton tooltip="ログアウト" onClick={handleSignOut}>
+							<LogOut className="size-4" />
+							<span>ログアウト</span>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
 			</SidebarFooter>
 		</Sidebar>
 	);

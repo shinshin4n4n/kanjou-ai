@@ -66,6 +66,14 @@ export const getTransactionsSchema = z.object({
 
 export type GetTransactionsInput = z.infer<typeof getTransactionsSchema>;
 
+export const transactionIdSchema = z.string().uuid("無効なIDです");
+
+export const bulkConfirmSchema = z.object({
+	ids: z.array(z.string().uuid("無効なIDです")).min(1, "1件以上の取引を指定してください"),
+});
+
+export type BulkConfirmInput = z.infer<typeof bulkConfirmSchema>;
+
 export const exportRequestSchema = z.object({
 	format: z.enum(["yayoi", "freee", "generic"]),
 	startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

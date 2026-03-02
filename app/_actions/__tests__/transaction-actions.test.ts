@@ -14,9 +14,12 @@ vi.mock("next/cache", () => ({
 
 import { revalidatePath } from "next/cache";
 import {
+	bulkConfirmTransactions,
+	confirmTransaction,
 	createTransaction,
 	getTransaction,
 	getTransactions,
+	softDeleteTransaction,
 	updateTransaction,
 } from "@/app/_actions/transaction-actions";
 import { requireAuth } from "@/lib/auth";
@@ -448,5 +451,269 @@ describe("getTransaction", () => {
 		const result = await getTransaction(TEST_UUID);
 
 		expect(result.success).toBe(false);
+	});
+});
+
+// --- Issue #12: 論理削除 + 確認フロー ---
+
+interface BulkMutationMockResult {
+	data: unknown[] | null;
+	error: { code: string; message: string } | null;
+}
+
+function createBulkMutationMock(result: BulkMutationMockResult) {
+	const mock: Record<string, ReturnType<typeof vi.fn>> = {};
+	for (const method of ["update", "select", "eq", "in"]) {
+		mock[method] = vi.fn().mockReturnValue(mock);
+	}
+	mock.select = vi.fn().mockResolvedValue(result);
+	const mockFrom = vi.fn().mockReturnValue(mock);
+
+	mockCreateClient.mockResolvedValue({
+		from: mockFrom,
+	} as unknown as Awaited<ReturnType<typeof createClient>>);
+
+	return { mock, mockFrom };
+}
+
+const TEST_UUID_2 = "550e8400-e29b-41d4-a716-446655440001";
+const TEST_UUID_3 = "550e8400-e29b-41d4-a716-446655440002";
+
+describe("softDeleteTransaction", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("正常に取引を論理削除できる", async () => {
+		mockAuthSuccess();
+		const deleted = { ...sampleTransaction, id: TEST_UUID, deleted_at: "2026-03-01T00:00:00Z" };
+		const { mock } = createMutationMock({ data: deleted, error: null });
+
+		const result = await softDeleteTransaction(TEST_UUID);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.deleted_at).not.toBeNull();
+		}
+		expect(mock.update).toHaveBeenCalledWith(
+			expect.objectContaining({ deleted_at: expect.any(String) }),
+		);
+		expect(mock.eq).toHaveBeenCalledWith("id", TEST_UUID);
+	});
+
+	it("未認証でUNAUTHORIZEDエラーを返す", async () => {
+		mockRequireAuth.mockResolvedValue({
+			success: false,
+			error: "ログインが必要です。",
+			code: "UNAUTHORIZED",
+		});
+
+		const result = await softDeleteTransaction(TEST_UUID);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("UNAUTHORIZED");
+		}
+	});
+
+	it("無効なIDでバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await softDeleteTransaction("invalid-uuid");
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+		}
+	});
+
+	it("存在しない取引でエラーを返す", async () => {
+		mockAuthSuccess();
+		createMutationMock({
+			data: null,
+			error: { code: "PGRST116", message: "not found" },
+		});
+
+		const result = await softDeleteTransaction(TEST_UUID);
+
+		expect(result.success).toBe(false);
+	});
+
+	it("削除後にrevalidatePathが呼ばれる", async () => {
+		mockAuthSuccess();
+		const deleted = { ...sampleTransaction, id: TEST_UUID, deleted_at: "2026-03-01T00:00:00Z" };
+		createMutationMock({ data: deleted, error: null });
+
+		await softDeleteTransaction(TEST_UUID);
+
+		expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
+	});
+
+	it("DBエラー時にエラー詳細を漏洩しない", async () => {
+		mockAuthSuccess();
+		createMutationMock({
+			data: null,
+			error: { code: "42501", message: "RLS violation" },
+		});
+
+		const result = await softDeleteTransaction(TEST_UUID);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).not.toContain("RLS violation");
+		}
+	});
+});
+
+describe("confirmTransaction", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("正常に取引を確認済みにできる", async () => {
+		mockAuthSuccess();
+		const confirmed = { ...sampleTransaction, id: TEST_UUID, is_confirmed: true };
+		const { mock } = createMutationMock({ data: confirmed, error: null });
+
+		const result = await confirmTransaction(TEST_UUID);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.is_confirmed).toBe(true);
+		}
+		expect(mock.update).toHaveBeenCalledWith(expect.objectContaining({ is_confirmed: true }));
+		expect(mock.eq).toHaveBeenCalledWith("id", TEST_UUID);
+	});
+
+	it("未認証でUNAUTHORIZEDエラーを返す", async () => {
+		mockRequireAuth.mockResolvedValue({
+			success: false,
+			error: "ログインが必要です。",
+			code: "UNAUTHORIZED",
+		});
+
+		const result = await confirmTransaction(TEST_UUID);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("UNAUTHORIZED");
+		}
+	});
+
+	it("無効なIDでバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await confirmTransaction("invalid-uuid");
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+		}
+	});
+
+	it("存在しない取引でエラーを返す", async () => {
+		mockAuthSuccess();
+		createMutationMock({
+			data: null,
+			error: { code: "PGRST116", message: "not found" },
+		});
+
+		const result = await confirmTransaction(TEST_UUID);
+
+		expect(result.success).toBe(false);
+	});
+
+	it("確認後にrevalidatePathが呼ばれる", async () => {
+		mockAuthSuccess();
+		const confirmed = { ...sampleTransaction, id: TEST_UUID, is_confirmed: true };
+		createMutationMock({ data: confirmed, error: null });
+
+		await confirmTransaction(TEST_UUID);
+
+		expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
+	});
+});
+
+describe("bulkConfirmTransactions", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("複数の取引を一括で確認済みにできる", async () => {
+		mockAuthSuccess();
+		const ids = [TEST_UUID, TEST_UUID_2, TEST_UUID_3];
+		const confirmed = ids.map((id) => ({ ...sampleTransaction, id, is_confirmed: true }));
+		const { mock } = createBulkMutationMock({ data: confirmed, error: null });
+
+		const result = await bulkConfirmTransactions(ids);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toHaveLength(3);
+		}
+		expect(mock.update).toHaveBeenCalledWith(expect.objectContaining({ is_confirmed: true }));
+		expect(mock.in).toHaveBeenCalledWith("id", ids);
+	});
+
+	it("未認証でUNAUTHORIZEDエラーを返す", async () => {
+		mockRequireAuth.mockResolvedValue({
+			success: false,
+			error: "ログインが必要です。",
+			code: "UNAUTHORIZED",
+		});
+
+		const result = await bulkConfirmTransactions([TEST_UUID]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("UNAUTHORIZED");
+		}
+	});
+
+	it("空配列でバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await bulkConfirmTransactions([]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+		}
+	});
+
+	it("無効なIDを含む場合にバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await bulkConfirmTransactions(["invalid-uuid"]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+		}
+	});
+
+	it("一括確認後にrevalidatePathが呼ばれる", async () => {
+		mockAuthSuccess();
+		const confirmed = [{ ...sampleTransaction, id: TEST_UUID, is_confirmed: true }];
+		createBulkMutationMock({ data: confirmed, error: null });
+
+		await bulkConfirmTransactions([TEST_UUID]);
+
+		expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
+	});
+
+	it("DBエラー時にエラー詳細を漏洩しない", async () => {
+		mockAuthSuccess();
+		createBulkMutationMock({
+			data: null,
+			error: { code: "42501", message: "RLS violation" },
+		});
+
+		const result = await bulkConfirmTransactions([TEST_UUID]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).not.toContain("RLS violation");
+		}
 	});
 });

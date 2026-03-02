@@ -433,6 +433,8 @@ docs: README強化 + セキュリティ方針 + ポートフォリオ用ドキ�
 - [ ] 技術選定理由ドキュメント（TubeReviewとの対比含む）
 - [ ] Supabase本番プロジェクト設定
 - [ ] 環境変数の本番設定
+- [ ] Google OAuth 設定（Google Cloud Console + Supabase Provider）
+- [ ] ログイン画面の Google ログインボタン復活（app/login/page.tsx のコメントアウト解除）
 - [ ] OGP + メタデータ
 - [ ] Lighthouse CI 導入（lighthouserc.json + GitHub Actions ワークフロー）
 - [ ] E2E テスト導入（Playwright でクリティカルパスのテスト: ログイン→取引作成→CSVインポート→AI仕訳推定→確認/承認→エクスポート）
