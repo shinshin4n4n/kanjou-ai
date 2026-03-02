@@ -33,9 +33,10 @@ export async function classifyTransactions(
 			throw new ApiError("AI_ERROR", "AIからの応答を取得できませんでした。");
 		}
 
+		const rawText = textBlock.text.replace(/^```(?:json)?\s*\n?|\n?```\s*$/g, "").trim();
 		let json: unknown;
 		try {
-			json = JSON.parse(textBlock.text);
+			json = JSON.parse(rawText);
 		} catch {
 			throw new ApiError("AI_ERROR", "AIの応答形式が不正です。");
 		}

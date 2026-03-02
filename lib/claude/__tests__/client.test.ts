@@ -183,6 +183,32 @@ describe("classifyTransactions", () => {
 		}
 	});
 
+	it("マークダウンコードブロック付きJSONをパースできる", async () => {
+		const jsonContent = JSON.stringify({
+			classifications: [
+				{
+					id: UUID_1,
+					debitAccount: "EXP001",
+					creditAccount: "AST002",
+					confidence: "HIGH",
+					reason: "通信費",
+				},
+			],
+		});
+		mockCreate.mockResolvedValue({
+			content: [{ type: "text", text: `\`\`\`json\n${jsonContent}\n\`\`\`` }],
+			stop_reason: "end_turn",
+		});
+
+		const result = await classifyTransactions(sampleInput);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toHaveLength(1);
+			expect(result.data[0].debitAccount).toBe("EXP001");
+		}
+	});
+
 	it("エラー詳細を漏洩しない", async () => {
 		mockCreate.mockRejectedValue(new Error("secret internal error details"));
 
