@@ -189,9 +189,12 @@ git diff --stat main...HEAD | tail -1
 - [ ] カバレッジ 80%以上
 - [ ] Lint エラーなし
 - [ ] TypeScript 型チェック通過
+- [ ] Server Action の呼び出し元で戻り値（success/error）をチェックしている
+- [ ] 成功時・失敗時のユーザーフィードバック（toast/alert）がある
+- [ ] UIの操作フロー（ボタン押下→結果表示）を手動で確認した
 - [ ] PR がマージ済み
 
 ---
 
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-03
 **Next Review:** 2026-05-28
