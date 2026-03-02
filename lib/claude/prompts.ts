@@ -17,7 +17,11 @@ ${accountList}
 - 推定理由（reason）を簡潔に日本語で返してください
 - 不明な場合は confidence を LOW にしてください
 - 費用の支払いは通常: 借方=費用科目、貸方=資産科目（普通預金など）
-- 収入の受取は通常: 借方=資産科目、貸方=収入科目`;
+- 収入の受取は通常: 借方=資産科目、貸方=収入科目
+
+## 出力形式
+以下のJSON形式のみを返してください。説明文やマークダウンは不要です。
+{"classifications":[{"id":"取引ID","debitAccount":"借方コード","creditAccount":"貸方コード","confidence":"HIGH","reason":"理由"}]}`;
 
 export function buildUserPrompt(transactions: TransactionInput[]): string {
 	const items = transactions

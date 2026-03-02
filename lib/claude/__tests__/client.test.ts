@@ -17,6 +17,11 @@ import type { TransactionInput } from "@/lib/claude/types";
 const UUID_1 = "550e8400-e29b-41d4-a716-446655440000";
 const UUID_2 = "550e8400-e29b-41d4-a716-446655440001";
 
+/** プリフィル「{」を考慮し、先頭の { を除いた文字列を返す */
+function withoutLeadingBrace(obj: unknown): string {
+	return JSON.stringify(obj).slice(1);
+}
+
 const sampleInput: TransactionInput[] = [
 	{
 		id: UUID_1,
@@ -30,7 +35,7 @@ const validApiResponse = {
 	content: [
 		{
 			type: "text",
-			text: JSON.stringify({
+			text: withoutLeadingBrace({
 				classifications: [
 					{
 						id: UUID_1,
@@ -75,7 +80,7 @@ describe("classifyTransactions", () => {
 			content: [
 				{
 					type: "text",
-					text: JSON.stringify({
+					text: withoutLeadingBrace({
 						classifications: [
 							{
 								id: UUID_1,
@@ -184,7 +189,7 @@ describe("classifyTransactions", () => {
 	});
 
 	it("マークダウンコードブロック付きJSONをパースできる", async () => {
-		const jsonContent = JSON.stringify({
+		const jsonContent = withoutLeadingBrace({
 			classifications: [
 				{
 					id: UUID_1,
