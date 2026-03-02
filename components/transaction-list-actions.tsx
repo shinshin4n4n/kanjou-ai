@@ -1,8 +1,9 @@
 "use client";
 
-import { Check, CheckCheck, Trash2 } from "lucide-react";
+import { Check, CheckCheck, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { runAiClassification } from "@/app/_actions/ai-classify-actions";
 import {
 	bulkConfirmTransactions,
 	confirmTransaction,
@@ -31,6 +32,13 @@ type Transaction = Tables<"transactions">;
 function accountName(code: string): string {
 	const account = ACCOUNT_CATEGORIES[code as keyof typeof ACCOUNT_CATEGORIES];
 	return account?.name ?? code;
+}
+
+function ConfidenceBadge({ score }: { score: number | null }) {
+	if (score == null) return null;
+	if (score >= 80) return <Badge className="bg-green-600 text-white">HIGH</Badge>;
+	if (score >= 50) return <Badge className="bg-yellow-500 text-white">MEDIUM</Badge>;
+	return <Badge className="bg-red-500 text-white">LOW</Badge>;
 }
 
 interface TransactionListActionsProps {
@@ -91,11 +99,23 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 		setLoading(false);
 	}
 
+	async function handleAiClassify() {
+		if (selected.size === 0) return;
+		setLoading(true);
+		await runAiClassification([...selected]);
+		setSelected(new Set());
+		setLoading(false);
+	}
+
 	return (
 		<>
 			{selected.size > 0 && (
 				<div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
 					<span className="text-sm font-medium">{selected.size}件選択中</span>
+					<Button size="sm" variant="outline" onClick={handleAiClassify} disabled={loading}>
+						<Sparkles className="mr-1 size-4" />
+						{loading ? "推定中…" : "AI推定"}
+					</Button>
 					<Button size="sm" variant="outline" onClick={handleBulkConfirm} disabled={loading}>
 						<CheckCheck className="mr-1 size-4" />
 						一括確認
@@ -152,9 +172,12 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 								<TableCell>{accountName(tx.debit_account)}</TableCell>
 								<TableCell>{accountName(tx.credit_account)}</TableCell>
 								<TableCell>
-									<Badge variant={tx.is_confirmed ? "default" : "secondary"}>
-										{tx.is_confirmed ? "確認済" : "未確認"}
-									</Badge>
+									<div className="flex items-center gap-1">
+										<Badge variant={tx.is_confirmed ? "default" : "secondary"}>
+											{tx.is_confirmed ? "確認済" : "未確認"}
+										</Badge>
+										{tx.ai_suggested && <ConfidenceBadge score={tx.ai_confidence} />}
+									</div>
 								</TableCell>
 								<TableCell>
 									<div className="flex items-center gap-1">
