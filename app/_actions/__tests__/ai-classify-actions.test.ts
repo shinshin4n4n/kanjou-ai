@@ -127,14 +127,14 @@ describe("runAiClassification", () => {
 				debit_account: "EXP001",
 				credit_account: "AST002",
 				ai_suggested: true,
-				ai_confidence: 90,
+				ai_confidence: 0.9,
 			},
 			{
 				...dbTransaction2,
 				debit_account: "EXP003",
 				credit_account: "AST001",
 				ai_suggested: true,
-				ai_confidence: 90,
+				ai_confidence: 0.9,
 			},
 		];
 		createSelectAndUpdateMock([dbTransaction1, dbTransaction2], updatedTxs);

@@ -37,8 +37,8 @@ function accountName(code: string): string {
 
 function ConfidenceBadge({ score }: { score: number | null }) {
 	if (score == null) return null;
-	if (score >= 80) return <Badge className="bg-green-600 text-white">HIGH</Badge>;
-	if (score >= 50) return <Badge className="bg-yellow-500 text-white">MEDIUM</Badge>;
+	if (score >= 0.8) return <Badge className="bg-green-600 text-white">HIGH</Badge>;
+	if (score >= 0.5) return <Badge className="bg-yellow-500 text-white">MEDIUM</Badge>;
 	return <Badge className="bg-red-500 text-white">LOW</Badge>;
 }
 

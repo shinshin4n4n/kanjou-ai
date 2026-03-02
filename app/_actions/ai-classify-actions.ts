@@ -10,9 +10,9 @@ import type { ApiResponse } from "@/lib/types/api";
 import { bulkConfirmSchema } from "@/lib/validators/transaction";
 
 const CONFIDENCE_SCORE: Record<string, number> = {
-	HIGH: 90,
-	MEDIUM: 60,
-	LOW: 30,
+	HIGH: 0.9,
+	MEDIUM: 0.6,
+	LOW: 0.3,
 };
 
 export async function runAiClassification(
