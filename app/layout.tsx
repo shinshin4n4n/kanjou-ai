@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Noto_Sans_JP } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			<body className={`${notoSansJP.variable} ${geistMono.variable} font-sans antialiased`}>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					{children}
+					<Toaster />
 				</ThemeProvider>
 			</body>
 		</html>

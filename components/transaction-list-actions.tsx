@@ -9,6 +9,7 @@ import {
 	confirmTransaction,
 	softDeleteTransaction,
 } from "@/app/_actions/transaction-actions";
+import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/lib/types/supabase";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
 import {
@@ -48,6 +49,7 @@ interface TransactionListActionsProps {
 export function TransactionListActions({ transactions }: TransactionListActionsProps) {
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
+	const { toast } = useToast();
 
 	const unconfirmed = transactions.filter((tx) => !tx.is_confirmed);
 	const allSelected = unconfirmed.length > 0 && unconfirmed.every((tx) => selected.has(tx.id));
@@ -93,18 +95,29 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 
 	async function handleBulkConfirm() {
 		if (selected.size === 0) return;
+		const count = selected.size;
 		setLoading(true);
-		await bulkConfirmTransactions([...selected]);
-		setSelected(new Set());
+		const result = await bulkConfirmTransactions([...selected]);
 		setLoading(false);
+		if (result.success) {
+			setSelected(new Set());
+			toast({ title: `${count}件の取引を確認済みにしました` });
+		} else {
+			toast({ title: "一括確認に失敗しました", description: result.error, variant: "destructive" });
+		}
 	}
 
 	async function handleAiClassify() {
 		if (selected.size === 0) return;
 		setLoading(true);
-		await runAiClassification([...selected]);
-		setSelected(new Set());
+		const result = await runAiClassification([...selected]);
 		setLoading(false);
+		if (result.success) {
+			setSelected(new Set());
+			toast({ title: `${result.data.length}件の仕訳を推定しました` });
+		} else {
+			toast({ title: "AI推定に失敗しました", description: result.error, variant: "destructive" });
+		}
 	}
 
 	return (
