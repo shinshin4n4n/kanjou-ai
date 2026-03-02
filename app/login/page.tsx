@@ -106,6 +106,7 @@ export default function LoginPage() {
 						</TabsContent>
 					</Tabs>
 
+					{/* TODO: Phase 6 で Google OAuth 設定後に復活（Issue #19）
 					<div className="relative my-4">
 						<div className="absolute inset-0 flex items-center">
 							<span className="w-full border-t" />
@@ -118,6 +119,7 @@ export default function LoginPage() {
 					<Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
 						Googleでログイン
 					</Button>
+					*/}
 				</CardContent>
 			</Card>
 		</div>

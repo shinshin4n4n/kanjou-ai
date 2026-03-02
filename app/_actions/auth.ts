@@ -58,6 +58,8 @@ export async function signUp(formData: FormData): Promise<ApiResponse<null>> {
 		const { error } = await supabase.auth.signUp(parsed.data);
 
 		if (error) {
+			// biome-ignore lint/suspicious/noConsole: エラーログは本番でも必要（CLAUDE.md ルール）
+			console.error("[signUp] Supabase auth error:", error.message, error.status);
 			return {
 				success: false,
 				error: "アカウントの作成に失敗しました。",
