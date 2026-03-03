@@ -90,7 +90,7 @@ export const applyClassificationsSchema = z.object({
 				id: z.string().uuid("無効なIDです"),
 				debitAccount: accountCodeSchema,
 				creditAccount: accountCodeSchema,
-				confidence: z.enum(["HIGH", "MEDIUM", "LOW"]),
+				confidence: z.enum(["HIGH", "MEDIUM", "LOW", "MANUAL"]),
 			}),
 		)
 		.min(1, "1件以上の分類を指定してください")

@@ -125,6 +125,17 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 		}
 	}
 
+	async function handleReClassify(instruction: string) {
+		setLoading(true);
+		const result = await runAiClassification([...selected], instruction);
+		setLoading(false);
+		if (result.success) {
+			setClassifyResults(result.data);
+		} else {
+			toast({ title: "AI推定に失敗しました", description: result.error, variant: "destructive" });
+		}
+	}
+
 	async function handleApplyClassifications(
 		rows: { id: string; debitAccount: string; creditAccount: string; confidence: string }[],
 	) {
@@ -268,6 +279,8 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 				open={classifyResults !== null}
 				onClose={() => setClassifyResults(null)}
 				onApply={handleApplyClassifications}
+				onReClassify={handleReClassify}
+				classifying={loading}
 			/>
 		</>
 	);

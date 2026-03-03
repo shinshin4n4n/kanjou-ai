@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { AiClassificationRow } from "@/app/_actions/ai-classify-actions";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
 import { Badge } from "./ui/badge";
@@ -23,6 +24,7 @@ import {
 	SelectValue,
 } from "./ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import { Textarea } from "./ui/textarea";
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 	expense: "経費",
@@ -31,14 +33,17 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 	liability: "負債",
 };
 
+type Confidence = "HIGH" | "MEDIUM" | "LOW" | "MANUAL";
+
 interface EditableRow {
 	id: string;
 	debitAccount: string;
 	creditAccount: string;
-	confidence: "HIGH" | "MEDIUM" | "LOW";
+	confidence: Confidence;
 }
 
-function ConfidenceBadge({ confidence }: { confidence: "HIGH" | "MEDIUM" | "LOW" }) {
+function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
+	if (confidence === "MANUAL") return <Badge className="bg-blue-600 text-white">MANUAL</Badge>;
 	if (confidence === "HIGH") return <Badge className="bg-green-600 text-white">HIGH</Badge>;
 	if (confidence === "MEDIUM") return <Badge className="bg-yellow-500 text-white">MEDIUM</Badge>;
 	return <Badge className="bg-red-500 text-white">LOW</Badge>;
@@ -79,14 +84,24 @@ interface AiClassifyDialogProps {
 	open: boolean;
 	onClose: () => void;
 	onApply: (rows: EditableRow[]) => Promise<void>;
+	onReClassify: (instruction: string) => Promise<void>;
+	classifying?: boolean;
 }
 
-export function AiClassifyDialog({ results, open, onClose, onApply }: AiClassifyDialogProps) {
+export function AiClassifyDialog({
+	results,
+	open,
+	onClose,
+	onApply,
+	onReClassify,
+	classifying,
+}: AiClassifyDialogProps) {
 	const [editable, setEditable] = useState<EditableRow[]>([]);
 	const [applying, setApplying] = useState(false);
+	const [instruction, setInstruction] = useState("");
 
-	function handleOpenChange(isOpen: boolean) {
-		if (isOpen && results) {
+	useEffect(() => {
+		if (results) {
 			setEditable(
 				results.map((r) => ({
 					id: r.id,
@@ -96,11 +111,21 @@ export function AiClassifyDialog({ results, open, onClose, onApply }: AiClassify
 				})),
 			);
 		}
-		if (!isOpen) onClose();
+	}, [results]);
+
+	function handleOpenChange(isOpen: boolean) {
+		if (!isOpen) {
+			setInstruction("");
+			onClose();
+		}
 	}
 
 	function updateRow(index: number, field: "debitAccount" | "creditAccount", value: string) {
-		setEditable((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+		setEditable((prev) =>
+			prev.map((row, i) =>
+				i === index ? { ...row, [field]: value, confidence: "MANUAL" as const } : row,
+			),
+		);
 	}
 
 	async function handleApply() {
@@ -109,7 +134,13 @@ export function AiClassifyDialog({ results, open, onClose, onApply }: AiClassify
 		setApplying(false);
 	}
 
+	async function handleReClassify() {
+		await onReClassify(instruction);
+	}
+
 	if (!results) return null;
+
+	const busy = applying || !!classifying;
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
@@ -120,6 +151,25 @@ export function AiClassifyDialog({ results, open, onClose, onApply }: AiClassify
 						{results.length}件の推定結果を確認してください。科目は変更可能です。
 					</DialogDescription>
 				</DialogHeader>
+				<div className="flex items-end gap-2">
+					<Textarea
+						placeholder="指示を入力（例: AWSの利用料は通信費にしてください）"
+						value={instruction}
+						onChange={(e) => setInstruction(e.target.value)}
+						rows={2}
+						className="flex-1"
+						disabled={busy}
+					/>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleReClassify}
+						disabled={busy || !instruction.trim()}
+					>
+						<Sparkles className="mr-1 size-4" />
+						{classifying ? "推定中…" : "再推定"}
+					</Button>
+				</div>
 				<div className="rounded-lg border">
 					<Table>
 						<TableHeader>
@@ -154,7 +204,7 @@ export function AiClassifyDialog({ results, open, onClose, onApply }: AiClassify
 										/>
 									</TableCell>
 									<TableCell>
-										<ConfidenceBadge confidence={row.confidence} />
+										<ConfidenceBadge confidence={editable[i]?.confidence ?? row.confidence} />
 									</TableCell>
 									<TableCell
 										className="max-w-[150px] truncate text-sm text-muted-foreground"
@@ -168,10 +218,10 @@ export function AiClassifyDialog({ results, open, onClose, onApply }: AiClassify
 					</Table>
 				</div>
 				<DialogFooter>
-					<Button variant="outline" onClick={onClose} disabled={applying}>
+					<Button variant="outline" onClick={onClose} disabled={busy}>
 						キャンセル
 					</Button>
-					<Button onClick={handleApply} disabled={applying}>
+					<Button onClick={handleApply} disabled={busy}>
 						{applying ? "適用中…" : `${results.length}件を承認`}
 					</Button>
 				</DialogFooter>
