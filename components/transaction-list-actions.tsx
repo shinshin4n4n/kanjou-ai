@@ -3,7 +3,11 @@
 import { Check, CheckCheck, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { runAiClassification } from "@/app/_actions/ai-classify-actions";
+import {
+	type AiClassificationRow,
+	applyAiClassifications,
+	runAiClassification,
+} from "@/app/_actions/ai-classify-actions";
 import {
 	bulkConfirmTransactions,
 	confirmTransaction,
@@ -12,6 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/lib/types/supabase";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
+import { AiClassifyDialog } from "./ai-classify-dialog";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -49,6 +54,7 @@ interface TransactionListActionsProps {
 export function TransactionListActions({ transactions }: TransactionListActionsProps) {
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
+	const [classifyResults, setClassifyResults] = useState<AiClassificationRow[] | null>(null);
 	const { toast } = useToast();
 
 	const unconfirmed = transactions.filter((tx) => !tx.is_confirmed);
@@ -113,10 +119,26 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 		const result = await runAiClassification([...selected]);
 		setLoading(false);
 		if (result.success) {
-			setSelected(new Set());
-			toast({ title: `${result.data.length}件の仕訳を推定しました` });
+			setClassifyResults(result.data);
 		} else {
 			toast({ title: "AI推定に失敗しました", description: result.error, variant: "destructive" });
+		}
+	}
+
+	async function handleApplyClassifications(
+		rows: { id: string; debitAccount: string; creditAccount: string; confidence: string }[],
+	) {
+		const result = await applyAiClassifications(rows);
+		if (result.success) {
+			setClassifyResults(null);
+			setSelected(new Set());
+			toast({ title: `${result.data}件の仕訳を適用しました` });
+		} else {
+			toast({
+				title: "仕訳の適用に失敗しました",
+				description: result.error,
+				variant: "destructive",
+			});
 		}
 	}
 
@@ -240,6 +262,13 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 					</TableBody>
 				</Table>
 			</div>
+
+			<AiClassifyDialog
+				results={classifyResults}
+				open={classifyResults !== null}
+				onClose={() => setClassifyResults(null)}
+				onApply={handleApplyClassifications}
+			/>
 		</>
 	);
 }

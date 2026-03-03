@@ -82,3 +82,19 @@ export const exportRequestSchema = z.object({
 });
 
 export type ExportRequestInput = z.infer<typeof exportRequestSchema>;
+
+export const applyClassificationsSchema = z.object({
+	classifications: z
+		.array(
+			z.object({
+				id: z.string().uuid("無効なIDです"),
+				debitAccount: accountCodeSchema,
+				creditAccount: accountCodeSchema,
+				confidence: z.enum(["HIGH", "MEDIUM", "LOW"]),
+			}),
+		)
+		.min(1, "1件以上の分類を指定してください")
+		.max(50, "一度に処理できるのは50件までです"),
+});
+
+export type ApplyClassificationsInput = z.infer<typeof applyClassificationsSchema>;
