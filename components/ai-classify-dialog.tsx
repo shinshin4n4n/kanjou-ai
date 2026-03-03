@@ -1,8 +1,15 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Save, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AiClassificationRow } from "@/app/_actions/ai-classify-actions";
+import {
+	type ClassificationRule,
+	deleteClassificationRule,
+	getClassificationRules,
+	saveClassificationRule,
+} from "@/app/_actions/classification-rule-actions";
+import { useToast } from "@/hooks/use-toast";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -99,6 +106,8 @@ export function AiClassifyDialog({
 	const [editable, setEditable] = useState<EditableRow[]>([]);
 	const [applying, setApplying] = useState(false);
 	const [instruction, setInstruction] = useState("");
+	const [rules, setRules] = useState<ClassificationRule[]>([]);
+	const { toast } = useToast();
 
 	useEffect(() => {
 		if (results) {
@@ -112,6 +121,14 @@ export function AiClassifyDialog({
 			);
 		}
 	}, [results]);
+
+	useEffect(() => {
+		if (open) {
+			getClassificationRules().then((res) => {
+				if (res.success) setRules(res.data);
+			});
+		}
+	}, [open]);
 
 	function handleOpenChange(isOpen: boolean) {
 		if (!isOpen) {
@@ -138,6 +155,24 @@ export function AiClassifyDialog({
 		await onReClassify(instruction);
 	}
 
+	async function handleSaveRule() {
+		if (!instruction.trim()) return;
+		const result = await saveClassificationRule(instruction.trim());
+		if (result.success) {
+			setRules((prev) => [result.data, ...prev]);
+			toast({ title: "ルールを保存しました" });
+		} else {
+			toast({ title: "ルールの保存に失敗しました", variant: "destructive" });
+		}
+	}
+
+	async function handleDeleteRule(id: string) {
+		const result = await deleteClassificationRule(id);
+		if (result.success) {
+			setRules((prev) => prev.filter((r) => r.id !== id));
+		}
+	}
+
 	if (!results) return null;
 
 	const busy = applying || !!classifying;
@@ -151,24 +186,69 @@ export function AiClassifyDialog({
 						{results.length}件の推定結果を確認してください。科目は変更可能です。
 					</DialogDescription>
 				</DialogHeader>
-				<div className="flex items-end gap-2">
-					<Textarea
-						placeholder="指示を入力（例: AWSの利用料は通信費にしてください）"
-						value={instruction}
-						onChange={(e) => setInstruction(e.target.value)}
-						rows={2}
-						className="flex-1"
-						disabled={busy}
-					/>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={handleReClassify}
-						disabled={busy || !instruction.trim()}
-					>
-						<Sparkles className="mr-1 size-4" />
-						{classifying ? "推定中…" : "再推定"}
-					</Button>
+				<div className="space-y-2">
+					<div className="flex items-end gap-2">
+						<Textarea
+							placeholder="指示を入力（例: AWSの利用料は通信費にしてください）"
+							value={instruction}
+							onChange={(e) => setInstruction(e.target.value)}
+							rows={2}
+							className="flex-1"
+							disabled={busy}
+						/>
+						<div className="flex flex-col gap-1">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleReClassify}
+								disabled={busy || !instruction.trim()}
+							>
+								<Sparkles className="mr-1 size-4" />
+								{classifying ? "推定中…" : "再推定"}
+							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleSaveRule}
+								disabled={busy || !instruction.trim()}
+							>
+								<Save className="mr-1 size-4" />
+								保存
+							</Button>
+						</div>
+					</div>
+					{rules.length > 0 && (
+						<div className="flex flex-wrap gap-1">
+							{rules.map((rule) => (
+								<button
+									key={rule.id}
+									type="button"
+									className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
+									onClick={() => setInstruction(rule.instruction)}
+									disabled={busy}
+								>
+									<span className="max-w-[200px] truncate">{rule.instruction}</span>
+									<span
+										role="button"
+										tabIndex={0}
+										className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteRule(rule.id);
+										}}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" || e.key === " ") {
+												e.stopPropagation();
+												handleDeleteRule(rule.id);
+											}
+										}}
+									>
+										<X className="size-3" />
+									</span>
+								</button>
+							))}
+						</div>
+					)}
 				</div>
 				<div className="rounded-lg border">
 					<Table>

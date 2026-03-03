@@ -8,6 +8,35 @@ export type Database = {
 	};
 	public: {
 		Tables: {
+			classification_rules: {
+				Row: {
+					created_at: string;
+					id: string;
+					instruction: string;
+					user_id: string;
+				};
+				Insert: {
+					created_at?: string;
+					id?: string;
+					instruction: string;
+					user_id: string;
+				};
+				Update: {
+					created_at?: string;
+					id?: string;
+					instruction?: string;
+					user_id?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "classification_rules_user_id_fkey";
+						columns: ["user_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 			account_categories: {
 				Row: {
 					category_type: string;
