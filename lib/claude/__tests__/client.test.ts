@@ -214,6 +214,40 @@ describe("classifyTransactions", () => {
 		}
 	});
 
+	it("ユーザー指示がプロンプトに含まれる", async () => {
+		mockCreate.mockResolvedValue(validApiResponse);
+
+		await classifyTransactions(sampleInput, "AWSは通信費にしてください");
+
+		expect(mockCreate).toHaveBeenCalledWith(
+			expect.objectContaining({
+				messages: expect.arrayContaining([
+					expect.objectContaining({
+						role: "user",
+						content: expect.stringContaining("AWSは通信費にしてください"),
+					}),
+				]),
+			}),
+		);
+	});
+
+	it("ユーザー指示なしで従来通り動作する", async () => {
+		mockCreate.mockResolvedValue(validApiResponse);
+
+		await classifyTransactions(sampleInput);
+
+		expect(mockCreate).toHaveBeenCalledWith(
+			expect.objectContaining({
+				messages: expect.arrayContaining([
+					expect.objectContaining({
+						role: "user",
+						content: expect.not.stringContaining("ユーザー指示"),
+					}),
+				]),
+			}),
+		);
+	});
+
 	it("エラー詳細を漏洩しない", async () => {
 		mockCreate.mockRejectedValue(new Error("secret internal error details"));
 

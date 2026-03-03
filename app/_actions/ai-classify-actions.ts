@@ -13,6 +13,7 @@ const CONFIDENCE_SCORE: Record<string, number> = {
 	HIGH: 0.9,
 	MEDIUM: 0.6,
 	LOW: 0.3,
+	MANUAL: 1.0,
 };
 
 export interface AiClassificationRow {
@@ -27,6 +28,7 @@ export interface AiClassificationRow {
 
 export async function runAiClassification(
 	ids: string[],
+	userInstruction?: string,
 ): Promise<ApiResponse<AiClassificationRow[]>> {
 	try {
 		const authResult = await requireAuth();
@@ -63,7 +65,7 @@ export async function runAiClassification(
 			amount: tx.amount,
 		}));
 
-		const classifyResult = await classifyTransactions(inputs);
+		const classifyResult = await classifyTransactions(inputs, userInstruction);
 		if (!classifyResult.success) {
 			return {
 				success: false,
@@ -111,26 +113,28 @@ export async function applyAiClassifications(
 		}
 
 		const supabase = await createClient();
-		let updatedCount = 0;
 
-		for (const item of parsed.data.classifications) {
-			const score = CONFIDENCE_SCORE[item.confidence] ?? 0;
-			const { error: updateError } = await supabase
-				.from("transactions")
-				.update({
-					debit_account: item.debitAccount,
-					credit_account: item.creditAccount,
-					ai_suggested: true,
-					ai_confidence: score,
-					is_confirmed: true,
-				})
-				.eq("id", item.id);
-			if (updateError) return handleApiError(updateError);
-			updatedCount++;
-		}
+		const results = await Promise.all(
+			parsed.data.classifications.map((item) => {
+				const score = CONFIDENCE_SCORE[item.confidence] ?? 0;
+				return supabase
+					.from("transactions")
+					.update({
+						debit_account: item.debitAccount,
+						credit_account: item.creditAccount,
+						ai_suggested: item.confidence !== "MANUAL",
+						ai_confidence: score,
+						is_confirmed: true,
+					})
+					.eq("id", item.id);
+			}),
+		);
+
+		const firstError = results.find((r) => r.error);
+		if (firstError?.error) return handleApiError(firstError.error);
 
 		revalidatePath("/transactions");
-		return { success: true, data: updatedCount };
+		return { success: true, data: results.length };
 	} catch (error) {
 		return handleApiError(error);
 	}

@@ -11,6 +11,7 @@ import {
 
 export async function classifyTransactions(
 	transactions: TransactionInput[],
+	userInstruction?: string,
 ): Promise<ApiResponse<ClassifiedTransaction[]>> {
 	try {
 		const parsed = aiClassifyRequestSchema.safeParse({ transactions });
@@ -24,7 +25,7 @@ export async function classifyTransactions(
 			max_tokens: 4096,
 			system: SYSTEM_PROMPT,
 			messages: [
-				{ role: "user", content: buildUserPrompt(parsed.data.transactions) },
+				{ role: "user", content: buildUserPrompt(parsed.data.transactions, userInstruction) },
 				{ role: "assistant", content: "{" },
 			],
 		});

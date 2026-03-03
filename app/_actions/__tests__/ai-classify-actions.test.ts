@@ -244,6 +244,27 @@ describe("runAiClassification", () => {
 			expect(result.error).not.toContain("internal");
 		}
 	});
+
+	it("userInstructionをclassifyTransactionsに渡す", async () => {
+		mockAuthSuccess();
+		createSelectMock([dbTransaction1]);
+		mockClassify.mockResolvedValue({
+			success: true,
+			data: [
+				{
+					id: UUID_1,
+					debitAccount: "EXP001",
+					creditAccount: "AST002",
+					confidence: "HIGH",
+					reason: "理由",
+				},
+			],
+		});
+
+		await runAiClassification([UUID_1], "AWSは通信費にして");
+
+		expect(mockClassify).toHaveBeenCalledWith(expect.anything(), "AWSは通信費にして");
+	});
 });
 
 describe("applyAiClassifications", () => {
@@ -345,5 +366,39 @@ describe("applyAiClassifications", () => {
 			expect(result.error).not.toContain("secret");
 			expect(result.error).not.toContain("RLS");
 		}
+	});
+
+	it("MANUAL confidenceでai_confidence=1.0, ai_suggested=falseを設定する", async () => {
+		mockAuthSuccess();
+		const { updateChain } = createUpdateMock();
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "MANUAL" },
+		]);
+
+		expect(result.success).toBe(true);
+		expect(updateChain.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				ai_confidence: 1.0,
+				ai_suggested: false,
+				is_confirmed: true,
+			}),
+		);
+	});
+
+	it("複数件を並列で更新する", async () => {
+		mockAuthSuccess();
+		const { updateChain } = createUpdateMock();
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "HIGH" },
+			{ id: UUID_2, debitAccount: "EXP003", creditAccount: "AST001", confidence: "MEDIUM" },
+		]);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toBe(2);
+		}
+		expect(updateChain.update).toHaveBeenCalledTimes(2);
 	});
 });

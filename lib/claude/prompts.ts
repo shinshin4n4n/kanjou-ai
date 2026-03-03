@@ -23,12 +23,19 @@ ${accountList}
 以下のJSON形式のみを返してください。説明文やマークダウンは不要です。
 {"classifications":[{"id":"取引ID","debitAccount":"借方コード","creditAccount":"貸方コード","confidence":"HIGH","reason":"理由"}]}`;
 
-export function buildUserPrompt(transactions: TransactionInput[]): string {
+export function buildUserPrompt(
+	transactions: TransactionInput[],
+	userInstruction?: string,
+): string {
 	const items = transactions
 		.map(
 			(tx, i) => `${i + 1}. [${tx.id ?? "no-id"}] ${tx.date} | ${tx.description} | ${tx.amount}円`,
 		)
 		.join("\n");
 
-	return `以下の取引の仕訳を推定してください:\n\n${items}`;
+	let prompt = `以下の取引の仕訳を推定してください:\n\n${items}`;
+	if (userInstruction?.trim()) {
+		prompt += `\n\n## ユーザー指示\n${userInstruction.trim()}`;
+	}
+	return prompt;
 }
