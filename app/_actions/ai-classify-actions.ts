@@ -7,7 +7,7 @@ import { classifyTransactions } from "@/lib/claude/client";
 import type { ClassifiedTransaction } from "@/lib/claude/types";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/lib/types/api";
-import { bulkConfirmSchema } from "@/lib/validators/transaction";
+import { applyClassificationsSchema, bulkConfirmSchema } from "@/lib/validators/transaction";
 
 const CONFIDENCE_SCORE: Record<string, number> = {
 	HIGH: 0.9,
@@ -15,9 +15,19 @@ const CONFIDENCE_SCORE: Record<string, number> = {
 	LOW: 0.3,
 };
 
+export interface AiClassificationRow {
+	id: string;
+	description: string;
+	amount: number;
+	debitAccount: string;
+	creditAccount: string;
+	confidence: "HIGH" | "MEDIUM" | "LOW";
+	reason: string;
+}
+
 export async function runAiClassification(
 	ids: string[],
-): Promise<ApiResponse<ClassifiedTransaction[]>> {
+): Promise<ApiResponse<AiClassificationRow[]>> {
 	try {
 		const authResult = await requireAuth();
 		if (!authResult.success) return authResult;
@@ -62,23 +72,65 @@ export async function runAiClassification(
 			};
 		}
 
-		for (const classification of classifyResult.data) {
-			if (!classification.id) continue;
-			const score = CONFIDENCE_SCORE[classification.confidence] ?? 0;
+		const rows: AiClassificationRow[] = classifyResult.data
+			.filter((c): c is ClassifiedTransaction & { id: string } => !!c.id)
+			.map((c) => {
+				const tx = transactions.find((t) => t.id === c.id);
+				return {
+					id: c.id,
+					description: tx?.description ?? "",
+					amount: tx?.amount ?? 0,
+					debitAccount: c.debitAccount,
+					creditAccount: c.creditAccount,
+					confidence: c.confidence,
+					reason: c.reason,
+				};
+			});
+
+		return { success: true, data: rows };
+	} catch (error) {
+		return handleApiError(error);
+	}
+}
+
+export async function applyAiClassifications(
+	classifications: {
+		id: string;
+		debitAccount: string;
+		creditAccount: string;
+		confidence: string;
+	}[],
+): Promise<ApiResponse<number>> {
+	try {
+		const authResult = await requireAuth();
+		if (!authResult.success) return authResult;
+
+		const parsed = applyClassificationsSchema.safeParse({ classifications });
+		if (!parsed.success) {
+			return { success: false, error: "入力内容を確認してください。", code: "VALIDATION_ERROR" };
+		}
+
+		const supabase = await createClient();
+		let updatedCount = 0;
+
+		for (const item of parsed.data.classifications) {
+			const score = CONFIDENCE_SCORE[item.confidence] ?? 0;
 			const { error: updateError } = await supabase
 				.from("transactions")
 				.update({
-					debit_account: classification.debitAccount,
-					credit_account: classification.creditAccount,
+					debit_account: item.debitAccount,
+					credit_account: item.creditAccount,
 					ai_suggested: true,
 					ai_confidence: score,
+					is_confirmed: true,
 				})
-				.eq("id", classification.id);
+				.eq("id", item.id);
 			if (updateError) return handleApiError(updateError);
+			updatedCount++;
 		}
 
 		revalidatePath("/transactions");
-		return { success: true, data: classifyResult.data };
+		return { success: true, data: updatedCount };
 	} catch (error) {
 		return handleApiError(error);
 	}

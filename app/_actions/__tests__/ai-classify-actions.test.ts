@@ -17,7 +17,7 @@ vi.mock("next/cache", () => ({
 }));
 
 import { revalidatePath } from "next/cache";
-import { runAiClassification } from "@/app/_actions/ai-classify-actions";
+import { applyAiClassifications, runAiClassification } from "@/app/_actions/ai-classify-actions";
 import { requireAuth } from "@/lib/auth";
 import { classifyTransactions } from "@/lib/claude/client";
 import { createClient } from "@/lib/supabase/server";
@@ -63,31 +63,18 @@ function createSelectMock(
 	return { mock, mockFrom };
 }
 
-function createSelectAndUpdateMock(
-	selectData: unknown[],
-	_updateData: unknown[] | null = null,
-	updateError: { code: string; message: string } | null = null,
-) {
+function createUpdateMock(updateError: { code: string; message: string } | null = null) {
 	const updateChain: Record<string, ReturnType<typeof vi.fn>> = {};
 	updateChain.update = vi.fn().mockReturnValue(updateChain);
 	updateChain.eq = vi.fn().mockResolvedValue({ error: updateError });
 
-	const selectChain: Record<string, ReturnType<typeof vi.fn>> = {};
-	selectChain.select = vi.fn().mockReturnValue(selectChain);
-	selectChain.in = vi.fn().mockResolvedValue({ data: selectData, error: null });
-
-	let callCount = 0;
-	const mockFrom = vi.fn().mockImplementation(() => {
-		callCount++;
-		if (callCount === 1) return selectChain;
-		return updateChain;
-	});
+	const mockFrom = vi.fn().mockReturnValue(updateChain);
 
 	mockCreateClient.mockResolvedValue({
 		from: mockFrom,
 	} as unknown as Awaited<ReturnType<typeof createClient>>);
 
-	return { mockFrom, selectChain, updateChain };
+	return { mockFrom, updateChain };
 }
 
 const dbTransaction1 = {
@@ -119,25 +106,9 @@ describe("runAiClassification", () => {
 		vi.clearAllMocks();
 	});
 
-	it("正常推定: AI分類結果を返しDBを更新する", async () => {
+	it("正常推定: AI分類結果にdescriptionとamountを含めて返す", async () => {
 		mockAuthSuccess();
-		const updatedTxs = [
-			{
-				...dbTransaction1,
-				debit_account: "EXP001",
-				credit_account: "AST002",
-				ai_suggested: true,
-				ai_confidence: 0.9,
-			},
-			{
-				...dbTransaction2,
-				debit_account: "EXP003",
-				credit_account: "AST001",
-				ai_suggested: true,
-				ai_confidence: 0.9,
-			},
-		];
-		createSelectAndUpdateMock([dbTransaction1, dbTransaction2], updatedTxs);
+		createSelectMock([dbTransaction1, dbTransaction2]);
 		mockClassify.mockResolvedValue({
 			success: true,
 			data: [
@@ -163,10 +134,43 @@ describe("runAiClassification", () => {
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data).toHaveLength(2);
-			expect(result.data[0].debitAccount).toBe("EXP001");
-			expect(result.data[0].confidence).toBe("HIGH");
-			expect(result.data[1].debitAccount).toBe("EXP003");
+			expect(result.data[0]).toMatchObject({
+				id: UUID_1,
+				description: "AWS利用料",
+				amount: 5000,
+				debitAccount: "EXP001",
+				creditAccount: "AST002",
+				confidence: "HIGH",
+				reason: "クラウドサービス利用料",
+			});
+			expect(result.data[1]).toMatchObject({
+				id: UUID_2,
+				description: "電車代",
+				amount: 500,
+				debitAccount: "EXP003",
+			});
 		}
+	});
+
+	it("DBに保存しない（revalidatePathを呼ばない）", async () => {
+		mockAuthSuccess();
+		createSelectMock([dbTransaction1]);
+		mockClassify.mockResolvedValue({
+			success: true,
+			data: [
+				{
+					id: UUID_1,
+					debitAccount: "EXP001",
+					creditAccount: "AST002",
+					confidence: "HIGH",
+					reason: "理由",
+				},
+			],
+		});
+
+		await runAiClassification([UUID_1]);
+
+		expect(mockRevalidatePath).not.toHaveBeenCalled();
 	});
 
 	it("AI APIエラー時にAI_ERRORを返す", async () => {
@@ -223,52 +227,6 @@ describe("runAiClassification", () => {
 		}
 	});
 
-	it("DB更新エラー時にエラーを返す", async () => {
-		mockAuthSuccess();
-		createSelectAndUpdateMock([dbTransaction1], null, {
-			code: "42501",
-			message: "permission denied",
-		});
-		mockClassify.mockResolvedValue({
-			success: true,
-			data: [
-				{
-					id: UUID_1,
-					debitAccount: "EXP001",
-					creditAccount: "AST002",
-					confidence: "HIGH",
-					reason: "理由",
-				},
-			],
-		});
-
-		const result = await runAiClassification([UUID_1]);
-
-		expect(result.success).toBe(false);
-	});
-
-	it("revalidatePathが呼ばれる", async () => {
-		mockAuthSuccess();
-		const updatedTx = { ...dbTransaction1, ai_suggested: true, ai_confidence: 90 };
-		createSelectAndUpdateMock([dbTransaction1], [updatedTx]);
-		mockClassify.mockResolvedValue({
-			success: true,
-			data: [
-				{
-					id: UUID_1,
-					debitAccount: "EXP001",
-					creditAccount: "AST002",
-					confidence: "HIGH",
-					reason: "理由",
-				},
-			],
-		});
-
-		await runAiClassification([UUID_1]);
-
-		expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
-	});
-
 	it("エラー詳細を漏洩しない", async () => {
 		mockAuthSuccess();
 		createSelectMock([dbTransaction1]);
@@ -284,6 +242,108 @@ describe("runAiClassification", () => {
 		if (!result.success) {
 			expect(result.error).not.toContain("secret");
 			expect(result.error).not.toContain("internal");
+		}
+	});
+});
+
+describe("applyAiClassifications", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("正常適用: 分類結果をDBに保存しis_confirmedをtrueにする", async () => {
+		mockAuthSuccess();
+		const { updateChain } = createUpdateMock();
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "HIGH" },
+		]);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toBe(1);
+		}
+		expect(updateChain.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				debit_account: "EXP001",
+				credit_account: "AST002",
+				ai_suggested: true,
+				is_confirmed: true,
+			}),
+		);
+	});
+
+	it("認証エラー時にUNAUTHORIZEDを返す", async () => {
+		mockAuthFailure();
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "HIGH" },
+		]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("UNAUTHORIZED");
+		}
+	});
+
+	it("空配列でバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await applyAiClassifications([]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+		}
+	});
+
+	it("無効な勘定科目でバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "INVALID", creditAccount: "AST002", confidence: "HIGH" },
+		]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+		}
+	});
+
+	it("DB更新エラー時にエラーを返す", async () => {
+		mockAuthSuccess();
+		createUpdateMock({ code: "42501", message: "permission denied" });
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "HIGH" },
+		]);
+
+		expect(result.success).toBe(false);
+	});
+
+	it("適用後にrevalidatePathが呼ばれる", async () => {
+		mockAuthSuccess();
+		createUpdateMock();
+
+		await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "HIGH" },
+		]);
+
+		expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
+	});
+
+	it("エラー詳細を漏洩しない", async () => {
+		mockAuthSuccess();
+		createUpdateMock({ code: "42501", message: "secret RLS violation details" });
+
+		const result = await applyAiClassifications([
+			{ id: UUID_1, debitAccount: "EXP001", creditAccount: "AST002", confidence: "HIGH" },
+		]);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).not.toContain("secret");
+			expect(result.error).not.toContain("RLS");
 		}
 	});
 });
