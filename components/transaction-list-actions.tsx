@@ -1,13 +1,15 @@
 "use client";
 
-import { Check, CheckCheck, Trash2 } from "lucide-react";
+import { Check, CheckCheck, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { runAiClassification } from "@/app/_actions/ai-classify-actions";
 import {
 	bulkConfirmTransactions,
 	confirmTransaction,
 	softDeleteTransaction,
 } from "@/app/_actions/transaction-actions";
+import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/lib/types/supabase";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
 import {
@@ -33,6 +35,13 @@ function accountName(code: string): string {
 	return account?.name ?? code;
 }
 
+function ConfidenceBadge({ score }: { score: number | null }) {
+	if (score == null) return null;
+	if (score >= 0.8) return <Badge className="bg-green-600 text-white">HIGH</Badge>;
+	if (score >= 0.5) return <Badge className="bg-yellow-500 text-white">MEDIUM</Badge>;
+	return <Badge className="bg-red-500 text-white">LOW</Badge>;
+}
+
 interface TransactionListActionsProps {
 	transactions: Transaction[];
 }
@@ -40,6 +49,7 @@ interface TransactionListActionsProps {
 export function TransactionListActions({ transactions }: TransactionListActionsProps) {
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
+	const { toast } = useToast();
 
 	const unconfirmed = transactions.filter((tx) => !tx.is_confirmed);
 	const allSelected = unconfirmed.length > 0 && unconfirmed.every((tx) => selected.has(tx.id));
@@ -85,10 +95,29 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 
 	async function handleBulkConfirm() {
 		if (selected.size === 0) return;
+		const count = selected.size;
 		setLoading(true);
-		await bulkConfirmTransactions([...selected]);
-		setSelected(new Set());
+		const result = await bulkConfirmTransactions([...selected]);
 		setLoading(false);
+		if (result.success) {
+			setSelected(new Set());
+			toast({ title: `${count}件の取引を確認済みにしました` });
+		} else {
+			toast({ title: "一括確認に失敗しました", description: result.error, variant: "destructive" });
+		}
+	}
+
+	async function handleAiClassify() {
+		if (selected.size === 0) return;
+		setLoading(true);
+		const result = await runAiClassification([...selected]);
+		setLoading(false);
+		if (result.success) {
+			setSelected(new Set());
+			toast({ title: `${result.data.length}件の仕訳を推定しました` });
+		} else {
+			toast({ title: "AI推定に失敗しました", description: result.error, variant: "destructive" });
+		}
 	}
 
 	return (
@@ -96,6 +125,10 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 			{selected.size > 0 && (
 				<div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
 					<span className="text-sm font-medium">{selected.size}件選択中</span>
+					<Button size="sm" variant="outline" onClick={handleAiClassify} disabled={loading}>
+						<Sparkles className="mr-1 size-4" />
+						{loading ? "推定中…" : "AI推定"}
+					</Button>
 					<Button size="sm" variant="outline" onClick={handleBulkConfirm} disabled={loading}>
 						<CheckCheck className="mr-1 size-4" />
 						一括確認
@@ -152,9 +185,12 @@ export function TransactionListActions({ transactions }: TransactionListActionsP
 								<TableCell>{accountName(tx.debit_account)}</TableCell>
 								<TableCell>{accountName(tx.credit_account)}</TableCell>
 								<TableCell>
-									<Badge variant={tx.is_confirmed ? "default" : "secondary"}>
-										{tx.is_confirmed ? "確認済" : "未確認"}
-									</Badge>
+									<div className="flex items-center gap-1">
+										<Badge variant={tx.is_confirmed ? "default" : "secondary"}>
+											{tx.is_confirmed ? "確認済" : "未確認"}
+										</Badge>
+										{tx.ai_suggested && <ConfidenceBadge score={tx.ai_confidence} />}
+									</div>
 								</TableCell>
 								<TableCell>
 									<div className="flex items-center gap-1">

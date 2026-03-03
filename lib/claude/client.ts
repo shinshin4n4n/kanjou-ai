@@ -23,7 +23,10 @@ export async function classifyTransactions(
 			model: "claude-sonnet-4-5-20250929",
 			max_tokens: 4096,
 			system: SYSTEM_PROMPT,
-			messages: [{ role: "user", content: buildUserPrompt(parsed.data.transactions) }],
+			messages: [
+				{ role: "user", content: buildUserPrompt(parsed.data.transactions) },
+				{ role: "assistant", content: "{" },
+			],
 		});
 
 		const textBlock = response.content.find(
@@ -33,9 +36,11 @@ export async function classifyTransactions(
 			throw new ApiError("AI_ERROR", "AIからの応答を取得できませんでした。");
 		}
 
+		const stripped = textBlock.text.replace(/^```(?:json)?\s*\n?|\n?```\s*$/g, "").trim();
+		const rawText = `{${stripped}`;
 		let json: unknown;
 		try {
-			json = JSON.parse(textBlock.text);
+			json = JSON.parse(rawText);
 		} catch {
 			throw new ApiError("AI_ERROR", "AIの応答形式が不正です。");
 		}
