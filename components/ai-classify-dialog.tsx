@@ -125,7 +125,11 @@ export function AiClassifyDialog({
 	useEffect(() => {
 		if (open) {
 			getClassificationRules().then((res) => {
-				if (res.success) setRules(res.data);
+				if (res.success) {
+					setRules(res.data);
+				} else {
+					toast({ title: "ルールの取得に失敗しました", variant: "destructive" });
+				}
 			});
 		}
 	}, [open]);
@@ -230,23 +234,16 @@ export function AiClassifyDialog({
 									disabled={busy}
 								>
 									<span className="max-w-[200px] truncate">{rule.instruction}</span>
-									<span
-										role="button"
-										tabIndex={0}
+									<button
+										type="button"
 										className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
 										onClick={(e) => {
 											e.stopPropagation();
 											handleDeleteRule(rule.id);
 										}}
-										onKeyDown={(e) => {
-											if (e.key === "Enter" || e.key === " ") {
-												e.stopPropagation();
-												handleDeleteRule(rule.id);
-											}
-										}}
 									>
 										<X className="size-3" />
-									</span>
+									</button>
 								</button>
 							))}
 						</div>
