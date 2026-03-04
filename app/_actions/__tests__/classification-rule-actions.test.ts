@@ -61,19 +61,31 @@ function createSelectChain(
 function createInsertChain(
 	data: unknown | null,
 	error: { code: string; message: string } | null = null,
+	existingCount = 0,
 ) {
-	const mock: Record<string, ReturnType<typeof vi.fn>> = {};
+	// count query chain: select("id", { count, head }) → eq("user_id") → resolves { count }
+	const countChain: Record<string, ReturnType<typeof vi.fn>> = {};
+	countChain.select = vi.fn().mockReturnValue(countChain);
+	countChain.eq = vi.fn().mockResolvedValue({ count: existingCount, error: null });
+
+	// insert chain: insert → select → single → resolves { data, error }
+	const insertChain: Record<string, ReturnType<typeof vi.fn>> = {};
 	for (const method of ["insert", "select"]) {
-		mock[method] = vi.fn().mockReturnValue(mock);
+		insertChain[method] = vi.fn().mockReturnValue(insertChain);
 	}
-	mock.single = vi.fn().mockResolvedValue({ data, error });
-	const mockFrom = vi.fn().mockReturnValue(mock);
+	insertChain.single = vi.fn().mockResolvedValue({ data, error });
+
+	let callCount = 0;
+	const mockFrom = vi.fn().mockImplementation(() => {
+		callCount++;
+		return callCount === 1 ? countChain : insertChain;
+	});
 
 	mockCreateClient.mockResolvedValue({
 		from: mockFrom,
 	} as unknown as Awaited<ReturnType<typeof createClient>>);
 
-	return { mock, mockFrom };
+	return { mock: insertChain, mockFrom };
 }
 
 function createDeleteChain(error: { code: string; message: string } | null = null) {
@@ -211,6 +223,19 @@ describe("saveClassificationRule", () => {
 		if (!result.success) {
 			expect(result.error).not.toContain("secret");
 			expect(result.error).not.toContain("duplicate");
+		}
+	});
+
+	it("上限20件超過でバリデーションエラーを返す", async () => {
+		mockAuthSuccess();
+		createInsertChain(null, null, 20);
+
+		const result = await saveClassificationRule("新しいルール");
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
+			expect(result.error).toContain("20");
 		}
 	});
 });

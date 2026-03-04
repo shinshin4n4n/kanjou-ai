@@ -170,6 +170,8 @@ export function AiClassifyDialog({
 		const result = await deleteClassificationRule(id);
 		if (result.success) {
 			setRules((prev) => prev.filter((r) => r.id !== id));
+		} else {
+			toast({ title: "ルールの削除に失敗しました", variant: "destructive" });
 		}
 	}
 

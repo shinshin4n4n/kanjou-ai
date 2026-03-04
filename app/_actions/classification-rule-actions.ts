@@ -51,6 +51,21 @@ export async function saveClassificationRule(
 		}
 
 		const supabase = await createClient();
+
+		const { count, error: countError } = await supabase
+			.from("classification_rules")
+			.select("id", { count: "exact", head: true })
+			.eq("user_id", authResult.data.id);
+
+		if (countError) return handleApiError(countError);
+		if ((count ?? 0) >= MAX_RULES_PER_USER) {
+			return {
+				success: false,
+				error: `ルールは最大${MAX_RULES_PER_USER}件までです。`,
+				code: "VALIDATION_ERROR",
+			};
+		}
+
 		const { data, error } = await supabase
 			.from("classification_rules")
 			.insert({
