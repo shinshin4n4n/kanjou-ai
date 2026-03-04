@@ -153,16 +153,24 @@ export const rakutenRowSchema = z
 	.passthrough();
 
 /**
- * ダブルクォートで囲まれたCSVフィールドを分割
+ * ダブルクォートで囲まれたCSVフィールドを分割（RFC 4180 準拠）
+ * - ダブルクォート内のカンマはフィールド区切りとして扱わない
+ * - エスケープクォート（""）は単一の " に変換
  */
 function splitCsvLine(line: string): string[] {
 	const fields: string[] = [];
 	let current = "";
 	let inQuotes = false;
 
-	for (const char of line) {
+	for (let i = 0; i < line.length; i++) {
+		const char = line[i];
 		if (char === '"') {
-			inQuotes = !inQuotes;
+			if (inQuotes && line[i + 1] === '"') {
+				current += '"';
+				i++;
+			} else {
+				inQuotes = !inQuotes;
+			}
 		} else if (char === "," && !inQuotes) {
 			fields.push(current);
 			current = "";
@@ -178,7 +186,7 @@ function splitCsvLine(line: string): string[] {
  * 楽天カード CSVをパースして統一取引データに変換
  */
 export function parseRakutenCsv(csvText: string): ParsedTransaction[] {
-	const lines = csvText.split("\n").filter((line) => line.trim() !== "");
+	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
 	const headers = splitCsvLine(lines[0]);

@@ -150,5 +150,24 @@ describe("CSV パーサー", () => {
 			const result = parseRakutenCsv(csvWithBadRow);
 			expect(result).toHaveLength(1);
 		});
+
+		it("Windows改行(CRLF)を処理する", () => {
+			const crlfCsv = [
+				'"利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額"',
+				'"2025/01/15","Amazon.co.jp","本人","1回払い","3500","0","3500"',
+			].join("\r\n");
+			const result = parseRakutenCsv(crlfCsv);
+			expect(result).toHaveLength(1);
+			expect(result[0].amount).toBe(3500);
+		});
+
+		it('エスケープクォート（""）を単一の"に変換する', () => {
+			const csvWithEscaped = [
+				'"利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額"',
+				'"2025/01/15","Amazon ""プライム""","本人","1回払い","500","0","500"',
+			].join("\n");
+			const result = parseRakutenCsv(csvWithEscaped);
+			expect(result[0].description).toBe('Amazon "プライム"');
+		});
 	});
 });
