@@ -246,7 +246,7 @@ const smbcRowSchema = z.object({
  * 1行目（契約者情報）をスキップ、空行・不正行も除外
  */
 export function parseSmbcCsv(csvText: string): ParsedTransaction[] {
-	const lines = csvText.split("\n").filter((line) => line.trim() !== "");
+	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
 	const transactions: ParsedTransaction[] = [];
