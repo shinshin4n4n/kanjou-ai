@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * CSV インポート対応フォーマット
  */
-export type CsvFormat = "wise" | "revolut" | "generic";
+export type CsvFormat = "wise" | "revolut" | "smbc" | "rakuten" | "generic";
 
 /**
  * パース後の統一取引データ
@@ -76,6 +76,11 @@ export function detectCsvFormat(headers: string[]): CsvFormat {
 		return "wise";
 	}
 
+	// 楽天カード: 「利用店名・商品名」カラムの存在で判定
+	if (headers.some((h) => h.trim() === "利用店名・商品名")) {
+		return "rakuten";
+	}
+
 	// Revolut: Date, Description, Amount, Currency, Balance の組み合わせ
 	if (
 		normalized.includes("date") &&
@@ -98,6 +103,13 @@ export function normalizeDate(dateStr: string): string {
 	const dmyMatch = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
 	if (dmyMatch) {
 		const [, day, month, year] = dmyMatch;
+		return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+	}
+
+	// YYYY/MM/DD (Japanese card statements)
+	const ymdSlashMatch = dateStr.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+	if (ymdSlashMatch) {
+		const [, year, month, day] = ymdSlashMatch;
 		return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 	}
 
@@ -126,4 +138,69 @@ export function parseAmount(amountStr: string): number {
 		throw new Error(`Invalid amount: ${amountStr}`);
 	}
 	return Math.round(num);
+}
+
+/**
+ * 楽天カード CSV カラム定義
+ * columns: 利用日, 利用店名・商品名, 利用者, 支払方法, 利用金額, 支払手数料, 支払総額
+ */
+export const rakutenRowSchema = z
+	.object({
+		利用日: z.string().min(1),
+		"利用店名・商品名": z.string().min(1),
+		利用金額: z.string().min(1),
+	})
+	.passthrough();
+
+/**
+ * ダブルクォートで囲まれたCSVフィールドを分割
+ */
+function splitCsvLine(line: string): string[] {
+	const fields: string[] = [];
+	let current = "";
+	let inQuotes = false;
+
+	for (const char of line) {
+		if (char === '"') {
+			inQuotes = !inQuotes;
+		} else if (char === "," && !inQuotes) {
+			fields.push(current);
+			current = "";
+		} else {
+			current += char;
+		}
+	}
+	fields.push(current);
+	return fields;
+}
+
+/**
+ * 楽天カード CSVをパースして統一取引データに変換
+ */
+export function parseRakutenCsv(csvText: string): ParsedTransaction[] {
+	const lines = csvText.split("\n").filter((line) => line.trim() !== "");
+	if (lines.length < 2) return [];
+
+	const headers = splitCsvLine(lines[0]);
+	const transactions: ParsedTransaction[] = [];
+
+	for (let i = 1; i < lines.length; i++) {
+		const columns = splitCsvLine(lines[i]);
+		const row: Record<string, string> = {};
+		for (let j = 0; j < headers.length; j++) {
+			row[headers[j]] = columns[j] ?? "";
+		}
+
+		const parsed = rakutenRowSchema.safeParse(row);
+		if (!parsed.success) continue;
+
+		const data = parsed.data;
+		transactions.push({
+			date: normalizeDate(data.利用日),
+			description: data["利用店名・商品名"],
+			amount: parseAmount(data.利用金額),
+		});
+	}
+
+	return transactions;
 }
