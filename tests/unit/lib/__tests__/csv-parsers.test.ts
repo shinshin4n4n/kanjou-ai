@@ -262,10 +262,7 @@ describe("CSV パーサー", () => {
 		});
 
 		it("Windows改行(CRLF)を処理する", () => {
-			const crlfCsv = [
-				"太郎,1234",
-				"2025/01/15,Amazon.co.jp,5000,1回,5000,,,",
-			].join("\r\n");
+			const crlfCsv = ["太郎,1234", "2025/01/15,Amazon.co.jp,5000,1回,5000,,,"].join("\r\n");
 			const result = parseSmbcCsv(crlfCsv);
 			expect(result).toHaveLength(1);
 			expect(result[0].amount).toBe(5000);
