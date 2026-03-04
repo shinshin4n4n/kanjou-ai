@@ -132,7 +132,7 @@ export function AiClassifyDialog({
 				}
 			});
 		}
-	}, [open]);
+	}, [open, toast]);
 
 	function handleOpenChange(isOpen: boolean) {
 		if (!isOpen) {
