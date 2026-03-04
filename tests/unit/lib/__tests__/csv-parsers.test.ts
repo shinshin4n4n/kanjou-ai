@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectCsvFormat, normalizeDate, parseAmount } from "@/lib/csv/parsers";
+import { detectCsvFormat, normalizeDate, parseAmount, parseRakutenCsv } from "@/lib/csv/parsers";
 
 describe("CSV パーサー", () => {
 	describe("detectCsvFormat", () => {
@@ -74,6 +74,100 @@ describe("CSV パーサー", () => {
 
 		it("不正な値でエラーを投げる", () => {
 			expect(() => parseAmount("abc")).toThrow("Invalid amount");
+		});
+	});
+
+	describe("detectCsvFormat - 楽天カード", () => {
+		it("楽天カード形式を検出する", () => {
+			const headers = [
+				"利用日",
+				"利用店名・商品名",
+				"利用者",
+				"支払方法",
+				"利用金額",
+				"支払手数料",
+				"支払総額",
+			];
+			expect(detectCsvFormat(headers)).toBe("rakuten");
+		});
+
+		it("利用店名・商品名がない場合は楽天と判定しない", () => {
+			const headers = ["利用日", "店名", "利用金額"];
+			expect(detectCsvFormat(headers)).toBe("generic");
+		});
+	});
+
+	describe("normalizeDate - YYYY/MM/DD", () => {
+		it("YYYY/MM/DD をYYYY-MM-DDに変換", () => {
+			expect(normalizeDate("2025/01/15")).toBe("2025-01-15");
+		});
+
+		it("YYYY/M/D の1桁月日をゼロパディング", () => {
+			expect(normalizeDate("2025/1/5")).toBe("2025-01-05");
+		});
+	});
+
+	describe("parseRakutenCsv", () => {
+		const rakutenCsv = [
+			'"利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額"',
+			'"2025/01/15","Amazon.co.jp","本人","1回払い","3500","0","3500"',
+			'"2025/01/20","コンビニエンスストア","本人","1回払い","850","0","850"',
+		].join("\n");
+
+		it("楽天カードCSVをパースして取引一覧を返す", () => {
+			const result = parseRakutenCsv(rakutenCsv);
+			expect(result).toHaveLength(2);
+		});
+
+		it("日付をYYYY-MM-DD形式に正規化する", () => {
+			const result = parseRakutenCsv(rakutenCsv);
+			expect(result[0].date).toBe("2025-01-15");
+		});
+
+		it("利用店名をdescriptionにマッピングする", () => {
+			const result = parseRakutenCsv(rakutenCsv);
+			expect(result[0].description).toBe("Amazon.co.jp");
+		});
+
+		it("利用金額を整数にパースする", () => {
+			const result = parseRakutenCsv(rakutenCsv);
+			expect(result[0].amount).toBe(3500);
+			expect(result[1].amount).toBe(850);
+		});
+
+		it("空行を無視する", () => {
+			const csvWithEmpty = `${rakutenCsv}\n\n`;
+			const result = parseRakutenCsv(csvWithEmpty);
+			expect(result).toHaveLength(2);
+		});
+
+		it("必須カラムが欠けている行をスキップする", () => {
+			const csvWithBadRow = [
+				'"利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額"',
+				'"2025/01/15","Amazon.co.jp","本人","1回払い","3500","0","3500"',
+				'"","","","","","",""',
+			].join("\n");
+			const result = parseRakutenCsv(csvWithBadRow);
+			expect(result).toHaveLength(1);
+		});
+
+		it("Windows改行(CRLF)を処理する", () => {
+			const crlfCsv = [
+				'"利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額"',
+				'"2025/01/15","Amazon.co.jp","本人","1回払い","3500","0","3500"',
+			].join("\r\n");
+			const result = parseRakutenCsv(crlfCsv);
+			expect(result).toHaveLength(1);
+			expect(result[0].amount).toBe(3500);
+		});
+
+		it('エスケープクォート（""）を単一の"に変換する', () => {
+			const csvWithEscaped = [
+				'"利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額"',
+				'"2025/01/15","Amazon ""プライム""","本人","1回払い","500","0","500"',
+			].join("\n");
+			const result = parseRakutenCsv(csvWithEscaped);
+			expect(result[0].description).toBe('Amazon "プライム"');
 		});
 	});
 });
