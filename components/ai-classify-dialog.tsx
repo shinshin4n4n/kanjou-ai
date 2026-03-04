@@ -226,32 +226,26 @@ export function AiClassifyDialog({
 					{rules.length > 0 && (
 						<div className="flex flex-wrap gap-1">
 							{rules.map((rule) => (
-								<div
+								<span
 									key={rule.id}
-									role="button"
-									tabIndex={0}
-									className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-3 py-1 text-xs hover:bg-muted aria-disabled:opacity-50"
-									onClick={() => !busy && setInstruction(rule.instruction)}
-									onKeyDown={(e) => {
-										if (!busy && (e.key === "Enter" || e.key === " ")) {
-											e.preventDefault();
-											setInstruction(rule.instruction);
-										}
-									}}
-									aria-disabled={busy}
+									className="inline-flex items-center gap-1 rounded-full border bg-muted/50 pl-3 pr-1 py-1 text-xs"
 								>
-									<span className="max-w-[200px] truncate">{rule.instruction}</span>
 									<button
 										type="button"
-										className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
-										onClick={(e) => {
-											e.stopPropagation();
-											handleDeleteRule(rule.id);
-										}}
+										className="max-w-[200px] truncate hover:underline disabled:opacity-50"
+										onClick={() => setInstruction(rule.instruction)}
+										disabled={busy}
+									>
+										{rule.instruction}
+									</button>
+									<button
+										type="button"
+										className="rounded-full p-0.5 hover:bg-destructive/20"
+										onClick={() => handleDeleteRule(rule.id)}
 									>
 										<X className="size-3" />
 									</button>
-								</div>
+								</span>
 							))}
 						</div>
 					)}
