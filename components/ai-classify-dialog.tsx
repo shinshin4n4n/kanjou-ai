@@ -226,12 +226,19 @@ export function AiClassifyDialog({
 					{rules.length > 0 && (
 						<div className="flex flex-wrap gap-1">
 							{rules.map((rule) => (
-								<button
+								<div
 									key={rule.id}
-									type="button"
-									className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
-									onClick={() => setInstruction(rule.instruction)}
-									disabled={busy}
+									role="button"
+									tabIndex={0}
+									className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-3 py-1 text-xs hover:bg-muted aria-disabled:opacity-50"
+									onClick={() => !busy && setInstruction(rule.instruction)}
+									onKeyDown={(e) => {
+										if (!busy && (e.key === "Enter" || e.key === " ")) {
+											e.preventDefault();
+											setInstruction(rule.instruction);
+										}
+									}}
+									aria-disabled={busy}
 								>
 									<span className="max-w-[200px] truncate">{rule.instruction}</span>
 									<button
@@ -244,7 +251,7 @@ export function AiClassifyDialog({
 									>
 										<X className="size-3" />
 									</button>
-								</button>
+								</div>
 							))}
 						</div>
 					)}
