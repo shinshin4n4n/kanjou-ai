@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { detectCsvFormat, normalizeDate, parseAmount, parseRakutenCsv } from "@/lib/csv/parsers";
+import {
+	detectCsvFormat,
+	detectSmbcFromContent,
+	normalizeDate,
+	parseAmount,
+	parseRakutenCsv,
+	parseSmbcCsv,
+} from "@/lib/csv/parsers";
 
 describe("CSV パーサー", () => {
 	describe("detectCsvFormat", () => {
@@ -168,6 +175,90 @@ describe("CSV パーサー", () => {
 			].join("\n");
 			const result = parseRakutenCsv(csvWithEscaped);
 			expect(result[0].description).toBe('Amazon "プライム"');
+		});
+	});
+
+	describe("detectSmbcFromContent", () => {
+		it("SMBC形式のCSV内容を検出する", () => {
+			const lines = [
+				"太郎,1234",
+				"2025/01/15,Amazon.co.jp,5000,1回,5000,,,",
+				"2025/01/20,コンビニ,300,1回,300,,,",
+			];
+			expect(detectSmbcFromContent(lines)).toBe(true);
+		});
+
+		it("1行目のカラム数が5以上の場合はSMBCと判定しない", () => {
+			const lines = ["col1,col2,col3,col4,col5", "2025/01/15,Amazon.co.jp,5000,1回,5000,,,"];
+			expect(detectSmbcFromContent(lines)).toBe(false);
+		});
+
+		it("2行目がYYYY/MM/DDで始まらない場合はSMBCと判定しない", () => {
+			const lines = ["太郎,1234", "not-a-date,Amazon.co.jp,5000,1回,5000,,,"];
+			expect(detectSmbcFromContent(lines)).toBe(false);
+		});
+
+		it("行が1行以下の場合はSMBCと判定しない", () => {
+			const lines = ["太郎,1234"];
+			expect(detectSmbcFromContent(lines)).toBe(false);
+		});
+	});
+
+	describe("parseSmbcCsv", () => {
+		const smbcCsv = [
+			"太郎,1234",
+			"2025/01/15,Amazon.co.jp,5000,1回,5000,,,",
+			"2025/01/20,コンビニエンスストア,850,1回,850,,,",
+		].join("\n");
+
+		it("SMBC CSVをパースして取引一覧を返す", () => {
+			const result = parseSmbcCsv(smbcCsv);
+			expect(result).toHaveLength(2);
+		});
+
+		it("日付をYYYY-MM-DD形式に正規化する", () => {
+			const result = parseSmbcCsv(smbcCsv);
+			expect(result[0].date).toBe("2025-01-15");
+		});
+
+		it("利用先をdescriptionにマッピングする", () => {
+			const result = parseSmbcCsv(smbcCsv);
+			expect(result[0].description).toBe("Amazon.co.jp");
+		});
+
+		it("利用金額を整数にパースする", () => {
+			const result = parseSmbcCsv(smbcCsv);
+			expect(result[0].amount).toBe(5000);
+			expect(result[1].amount).toBe(850);
+		});
+
+		it("1行目（契約者情報）をスキップする", () => {
+			const result = parseSmbcCsv(smbcCsv);
+			expect(result.every((t) => t.description !== "太郎")).toBe(true);
+		});
+
+		it("空行を無視する", () => {
+			const csvWithEmpty = `${smbcCsv}\n\n`;
+			const result = parseSmbcCsv(csvWithEmpty);
+			expect(result).toHaveLength(2);
+		});
+
+		it("不正な行をスキップする", () => {
+			const csvWithBadRow = ["太郎,1234", "2025/01/15,Amazon.co.jp,5000,1回,5000,,,", ",,,"].join(
+				"\n",
+			);
+			const result = parseSmbcCsv(csvWithBadRow);
+			expect(result).toHaveLength(1);
+		});
+
+		it("金額が不正な行をスキップする", () => {
+			const csvWithBadAmount = [
+				"太郎,1234",
+				"2025/01/15,Amazon.co.jp,abc,1回,abc,,,",
+				"2025/01/20,コンビニ,850,1回,850,,,",
+			].join("\n");
+			const result = parseSmbcCsv(csvWithBadAmount);
+			expect(result).toHaveLength(1);
 		});
 	});
 });
