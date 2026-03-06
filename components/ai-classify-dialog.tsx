@@ -161,20 +161,36 @@ export function AiClassifyDialog({
 
 	async function handleSaveRule() {
 		if (!instruction.trim()) return;
-		const result = await saveClassificationRule(instruction.trim());
-		if (result.success) {
-			setRules((prev) => [result.data, ...prev]);
-			toast({ title: "ルールを保存しました" });
-		} else {
+		try {
+			const result = await saveClassificationRule(instruction.trim());
+			if (result.success) {
+				setRules((prev) => [result.data, ...prev]);
+				toast({ title: "ルールを保存しました" });
+			} else {
+				toast({
+					title: "ルールの保存に失敗しました",
+					description: result.error,
+					variant: "destructive",
+				});
+			}
+		} catch {
 			toast({ title: "ルールの保存に失敗しました", variant: "destructive" });
 		}
 	}
 
 	async function handleDeleteRule(id: string) {
-		const result = await deleteClassificationRule(id);
-		if (result.success) {
-			setRules((prev) => prev.filter((r) => r.id !== id));
-		} else {
+		try {
+			const result = await deleteClassificationRule(id);
+			if (result.success) {
+				setRules((prev) => prev.filter((r) => r.id !== id));
+			} else {
+				toast({
+					title: "ルールの削除に失敗しました",
+					description: result.error,
+					variant: "destructive",
+				});
+			}
+		} catch {
 			toast({ title: "ルールの削除に失敗しました", variant: "destructive" });
 		}
 	}
