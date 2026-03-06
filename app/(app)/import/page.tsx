@@ -2,7 +2,7 @@
 
 import { CheckCircle, FileText, Upload } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { importTransactions } from "@/app/_actions/import-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,11 @@ export default function ImportPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [importedCount, setImportedCount] = useState(0);
 	const [isLoading, setIsLoading] = useState(false);
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	function resetFileInput() {
+		if (fileInputRef.current) fileInputRef.current.value = "";
+	}
 
 	function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
@@ -50,11 +55,13 @@ export default function ImportPage() {
 
 		if (!UPLOAD_LIMITS.ALLOWED_CSV_TYPES.includes(file.type) && !file.name.endsWith(".csv")) {
 			setError("CSVファイルのみアップロードできます。");
+			resetFileInput();
 			return;
 		}
 
 		if (file.size > UPLOAD_LIMITS.MAX_FILE_SIZE) {
 			setError("ファイルサイズが5MBを超えています。");
+			resetFileInput();
 			return;
 		}
 
@@ -62,6 +69,10 @@ export default function ImportPage() {
 		setFileSize(file.size);
 
 		const reader = new FileReader();
+		reader.onerror = () => {
+			setError("ファイルの読み込みに失敗しました。");
+			resetFileInput();
+		};
 		reader.onload = () => {
 			const buffer = reader.result as ArrayBuffer;
 			let csvText = new TextDecoder("utf-8").decode(buffer);
@@ -74,11 +85,13 @@ export default function ImportPage() {
 
 			if (result.transactions.length === 0) {
 				setError("CSVファイルから取引データを読み取れませんでした。");
+				resetFileInput();
 				return;
 			}
 
 			if (result.transactions.length > UPLOAD_LIMITS.MAX_ROWS_PER_IMPORT) {
 				setError(`取引件数が上限（${UPLOAD_LIMITS.MAX_ROWS_PER_IMPORT}件）を超えています。`);
+				resetFileInput();
 				return;
 			}
 
@@ -182,7 +195,8 @@ export default function ImportPage() {
 							<TableRow key={`${tx.date}-${tx.description}-${i}`}>
 								<TableCell>{tx.date}</TableCell>
 								<TableCell>{tx.description}</TableCell>
-								<TableCell className="text-right">
+								<TableCell className={`text-right ${tx.amount < 0 ? "text-destructive" : ""}`}>
+									{tx.amount < 0 ? "-" : ""}
 									{Math.abs(tx.amount).toLocaleString()}円
 								</TableCell>
 							</TableRow>
@@ -208,7 +222,7 @@ export default function ImportPage() {
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="space-y-2">
-						<Input type="file" accept=".csv" onChange={handleFileSelect} />
+						<Input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileSelect} />
 						<p className="text-xs text-muted-foreground">
 							<FileText className="inline size-3 mr-1" />
 							CSV形式、最大5MB（Wise / Revolut / 三井住友カード / 楽天カード対応）

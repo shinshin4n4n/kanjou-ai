@@ -115,6 +115,25 @@ describe("ImportPage", () => {
 			});
 		});
 
+		it("マイナス金額が赤字で符号付き表示される", async () => {
+			mockParseCsvResult([
+				{ date: "2026-01-01", description: "支出", amount: -3000 },
+				{ date: "2026-01-02", description: "収入", amount: 5000 },
+			]);
+			render(<ImportPage />);
+			const input = document.querySelector("input[type='file']");
+			fireEvent.change(input!, { target: { files: [createFile("test.csv", 100)] } });
+			await waitFor(() => {
+				expect(screen.getByText("プレビュー")).toBeInTheDocument();
+			});
+			const cells = screen.getAllByRole("cell");
+			const expenseCell = cells.find((cell) => cell.textContent?.includes("3,000"));
+			expect(expenseCell?.className).toContain("text-destructive");
+			expect(expenseCell?.textContent).toContain("-");
+			const incomeCell = cells.find((cell) => cell.textContent?.includes("5,000"));
+			expect(incomeCell?.className).not.toContain("text-destructive");
+		});
+
 		it("キャンセルでアップロードフェーズに戻る", async () => {
 			renderWithPreview();
 			await waitFor(() => {
