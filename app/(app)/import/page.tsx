@@ -48,6 +48,11 @@ export default function ImportPage() {
 
 		setError(null);
 
+		if (!UPLOAD_LIMITS.ALLOWED_CSV_TYPES.includes(file.type) && !file.name.endsWith(".csv")) {
+			setError("CSVファイルのみアップロードできます。");
+			return;
+		}
+
 		if (file.size > UPLOAD_LIMITS.MAX_FILE_SIZE) {
 			setError("ファイルサイズが5MBを超えています。");
 			return;
@@ -88,20 +93,25 @@ export default function ImportPage() {
 		setIsLoading(true);
 		setError(null);
 
-		const result = await importTransactions({
-			transactions,
-			fileName,
-			fileSize,
-			csvFormat,
-		});
+		try {
+			const result = await importTransactions({
+				transactions,
+				fileName,
+				fileSize,
+				csvFormat,
+			});
 
-		if (result.success) {
-			setImportedCount(result.data.importedCount);
-			setPhase("result");
-		} else {
-			setError(result.error);
+			if (result.success) {
+				setImportedCount(result.data.importedCount);
+				setPhase("result");
+			} else {
+				setError(result.error);
+			}
+		} catch {
+			setError("インポート中にエラーが発生しました。");
+		} finally {
+			setIsLoading(false);
 		}
-		setIsLoading(false);
 	}
 
 	function handleReset() {
