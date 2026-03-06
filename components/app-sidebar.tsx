@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, LayoutDashboard, List, LogOut, Settings } from "lucide-react";
+import { BookOpen, LayoutDashboard, List, LogOut, Settings, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/_actions/auth";
@@ -28,6 +28,11 @@ const navItems = [
 		label: "取引一覧",
 		href: "/transactions",
 		icon: List,
+	},
+	{
+		label: "CSVインポート",
+		href: "/import",
+		icon: Upload,
 	},
 	{
 		label: "設定",
