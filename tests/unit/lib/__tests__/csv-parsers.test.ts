@@ -4,8 +4,12 @@ import {
 	detectSmbcFromContent,
 	normalizeDate,
 	parseAmount,
+	parseCsv,
+	parseGenericCsv,
 	parseRakutenCsv,
+	parseRevolutCsv,
 	parseSmbcCsv,
+	parseWiseCsv,
 } from "@/lib/csv/parsers";
 
 describe("CSV パーサー", () => {
@@ -266,6 +270,147 @@ describe("CSV パーサー", () => {
 			const result = parseSmbcCsv(crlfCsv);
 			expect(result).toHaveLength(1);
 			expect(result[0].amount).toBe(5000);
+		});
+	});
+
+	describe("parseWiseCsv", () => {
+		const wiseCsv = [
+			"TransferWise ID,Date,Amount,Currency,Description,Payment Reference,Running Balance,Exchange From,Exchange To,Exchange Rate,Payer Name,Payee Name,Payee Account Number,Merchant,Card Last Four Digits,Card Holder Full Name,Attachment,Note,Total fees",
+			"12345,15-01-2025,-50.00,GBP,Transfer to John,REF001,450.00,GBP,JPY,190.5,,John Doe,,,,,,,2.50",
+			"12346,20-01-2025,1000.00,JPY,Salary,,1450.00,,,,Employer,,,,,,,,0",
+		].join("\n");
+
+		it("Wise CSVをパースして取引一覧を返す", () => {
+			const result = parseWiseCsv(wiseCsv);
+			expect(result).toHaveLength(2);
+			expect(result[0].date).toBe("2025-01-15");
+			expect(result[0].amount).toBe(-50);
+			expect(result[0].originalCurrency).toBe("GBP");
+			expect(result[0].exchangeRate).toBe(190.5);
+			expect(result[0].payeeName).toBe("John Doe");
+			expect(result[0].reference).toBe("REF001");
+			expect(result[0].fees).toBe(3);
+		});
+
+		it("データ行が無い場合は空配列を返す", () => {
+			const headerOnly =
+				"TransferWise ID,Date,Amount,Currency,Description,Payment Reference,Running Balance,Exchange From,Exchange To,Exchange Rate,Payer Name,Payee Name,Payee Account Number,Merchant,Card Last Four Digits,Card Holder Full Name,Attachment,Note,Total fees";
+			expect(parseWiseCsv(headerOnly)).toEqual([]);
+		});
+
+		it("必須カラムが欠けている行をスキップする", () => {
+			const csvWithBadRow = [
+				"TransferWise ID,Date,Amount,Currency,Description",
+				"12345,15-01-2025,-50.00,GBP,Transfer",
+				",,,",
+			].join("\n");
+			const result = parseWiseCsv(csvWithBadRow);
+			expect(result).toHaveLength(1);
+		});
+	});
+
+	describe("parseRevolutCsv", () => {
+		const revolutCsv = [
+			"Date,Description,Amount,Currency,Balance",
+			"15-01-2025,Netflix,-1500,JPY,48500",
+			"20-01-2025,Salary,300000,JPY,348500",
+		].join("\n");
+
+		it("Revolut CSVをパースして取引一覧を返す", () => {
+			const result = parseRevolutCsv(revolutCsv);
+			expect(result).toHaveLength(2);
+			expect(result[0].date).toBe("2025-01-15");
+			expect(result[0].description).toBe("Netflix");
+			expect(result[0].amount).toBe(-1500);
+			expect(result[0].originalCurrency).toBe("JPY");
+		});
+
+		it("データ行が無い場合は空配列を返す", () => {
+			const headerOnly = "Date,Description,Amount,Currency,Balance";
+			expect(parseRevolutCsv(headerOnly)).toEqual([]);
+		});
+
+		it("不正な金額の行をスキップする", () => {
+			const csvWithBadAmount = [
+				"Date,Description,Amount,Currency,Balance",
+				"15-01-2025,Netflix,abc,JPY,48500",
+				"20-01-2025,Salary,300000,JPY,348500",
+			].join("\n");
+			const result = parseRevolutCsv(csvWithBadAmount);
+			expect(result).toHaveLength(1);
+		});
+	});
+
+	describe("parseGenericCsv", () => {
+		const genericCsv = [
+			"date,description,amount",
+			"2025-01-15,通信費,5000",
+			"2025-01-20,交通費,1200",
+		].join("\n");
+
+		it("汎用CSVをパースして取引一覧を返す", () => {
+			const result = parseGenericCsv(genericCsv);
+			expect(result).toHaveLength(2);
+			expect(result[0].date).toBe("2025-01-15");
+			expect(result[0].description).toBe("通信費");
+			expect(result[0].amount).toBe(5000);
+		});
+
+		it("データ行が無い場合は空配列を返す", () => {
+			const headerOnly = "date,description,amount";
+			expect(parseGenericCsv(headerOnly)).toEqual([]);
+		});
+
+		it("不正な金額の行をスキップする", () => {
+			const csvWithBadAmount = [
+				"date,description,amount",
+				"2025-01-15,通信費,abc",
+				"2025-01-20,交通費,1200",
+			].join("\n");
+			const result = parseGenericCsv(csvWithBadAmount);
+			expect(result).toHaveLength(1);
+		});
+	});
+
+	describe("parseCsv（統一ディスパッチャー）", () => {
+		it("Wise CSVを自動判定してパースする", () => {
+			const wiseCsv = [
+				"TransferWise ID,Date,Amount,Currency,Description",
+				"12345,15-01-2025,-50.00,GBP,Transfer",
+			].join("\n");
+			const result = parseCsv(wiseCsv);
+			expect(result.format).toBe("wise");
+			expect(result.transactions).toHaveLength(1);
+		});
+
+		it("Revolut CSVを自動判定してパースする", () => {
+			const revolutCsv = [
+				"Date,Description,Amount,Currency,Balance",
+				"15-01-2025,Netflix,-1500,JPY,48500",
+			].join("\n");
+			const result = parseCsv(revolutCsv);
+			expect(result.format).toBe("revolut");
+			expect(result.transactions).toHaveLength(1);
+		});
+
+		it("SMBC CSVを内容ベースで自動判定してパースする", () => {
+			const smbcCsv = ["太郎,1234", "2025/01/15,Amazon.co.jp,5000,1回,5000,,,"].join("\n");
+			const result = parseCsv(smbcCsv);
+			expect(result.format).toBe("smbc");
+			expect(result.transactions).toHaveLength(1);
+		});
+
+		it("汎用CSVにフォールバックする", () => {
+			const genericCsv = ["date,description,amount", "2025-01-15,通信費,5000"].join("\n");
+			const result = parseCsv(genericCsv);
+			expect(result.format).toBe("generic");
+			expect(result.transactions).toHaveLength(1);
+		});
+
+		it("空のCSVで空配列を返す", () => {
+			const result = parseCsv("");
+			expect(result.format).toBe("generic");
+			expect(result.transactions).toEqual([]);
 		});
 	});
 });

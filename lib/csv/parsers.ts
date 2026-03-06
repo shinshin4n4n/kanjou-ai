@@ -278,3 +278,143 @@ export function parseSmbcCsv(csvText: string): ParsedTransaction[] {
 
 	return transactions;
 }
+
+/**
+ * Wise CSVをパースして統一取引データに変換
+ */
+export function parseWiseCsv(csvText: string): ParsedTransaction[] {
+	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
+	if (lines.length < 2) return [];
+
+	const headers = splitCsvLine(lines[0]);
+	const transactions: ParsedTransaction[] = [];
+
+	for (let i = 1; i < lines.length; i++) {
+		const columns = splitCsvLine(lines[i]);
+		const row: Record<string, string> = {};
+		for (let j = 0; j < headers.length; j++) {
+			row[headers[j]] = columns[j] ?? "";
+		}
+
+		const parsed = wiseRowSchema.safeParse(row);
+		if (!parsed.success) continue;
+
+		const data = parsed.data;
+		try {
+			transactions.push({
+				date: normalizeDate(data.Date),
+				description: data.Description,
+				amount: parseAmount(data.Amount),
+				originalCurrency: data.Currency,
+				exchangeRate: data["Exchange Rate"] ? Number.parseFloat(data["Exchange Rate"]) : undefined,
+				payeeName: data["Payee Name"] || undefined,
+				reference: data["Payment Reference"] || undefined,
+				fees: data["Total fees"] ? parseAmount(data["Total fees"]) : undefined,
+			});
+		} catch {
+			// 金額パースエラー時はスキップ
+		}
+	}
+
+	return transactions;
+}
+
+/**
+ * Revolut CSVをパースして統一取引データに変換
+ */
+export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
+	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
+	if (lines.length < 2) return [];
+
+	const headers = splitCsvLine(lines[0]);
+	const transactions: ParsedTransaction[] = [];
+
+	for (let i = 1; i < lines.length; i++) {
+		const columns = splitCsvLine(lines[i]);
+		const row: Record<string, string> = {};
+		for (let j = 0; j < headers.length; j++) {
+			row[headers[j]] = columns[j] ?? "";
+		}
+
+		const parsed = revolutRowSchema.safeParse(row);
+		if (!parsed.success) continue;
+
+		const data = parsed.data;
+		try {
+			transactions.push({
+				date: normalizeDate(data.Date),
+				description: data.Description,
+				amount: parseAmount(data.Amount),
+				originalCurrency: data.Currency,
+			});
+		} catch {
+			// 金額パースエラー時はスキップ
+		}
+	}
+
+	return transactions;
+}
+
+/**
+ * 汎用CSVをパースして統一取引データに変換
+ */
+export function parseGenericCsv(csvText: string): ParsedTransaction[] {
+	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
+	if (lines.length < 2) return [];
+
+	const headers = splitCsvLine(lines[0]);
+	const transactions: ParsedTransaction[] = [];
+
+	for (let i = 1; i < lines.length; i++) {
+		const columns = splitCsvLine(lines[i]);
+		const row: Record<string, string> = {};
+		for (let j = 0; j < headers.length; j++) {
+			row[headers[j]] = columns[j] ?? "";
+		}
+
+		const parsed = genericRowSchema.safeParse(row);
+		if (!parsed.success) continue;
+
+		const data = parsed.data;
+		try {
+			transactions.push({
+				date: normalizeDate(data.date),
+				description: data.description,
+				amount: parseAmount(data.amount),
+			});
+		} catch {
+			// 金額パースエラー時はスキップ
+		}
+	}
+
+	return transactions;
+}
+
+/**
+ * CSV テキストを自動判定してパースする統一ディスパッチャー
+ */
+export function parseCsv(csvText: string): {
+	format: CsvFormat;
+	transactions: ParsedTransaction[];
+} {
+	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
+	if (lines.length === 0) return { format: "generic", transactions: [] };
+
+	if (detectSmbcFromContent(lines)) {
+		return { format: "smbc", transactions: parseSmbcCsv(csvText) };
+	}
+
+	const headers = splitCsvLine(lines[0]);
+	const format = detectCsvFormat(headers);
+
+	switch (format) {
+		case "wise":
+			return { format, transactions: parseWiseCsv(csvText) };
+		case "rakuten":
+			return { format, transactions: parseRakutenCsv(csvText) };
+		case "revolut":
+			return { format, transactions: parseRevolutCsv(csvText) };
+		default:
+			return { format: "generic", transactions: parseGenericCsv(csvText) };
+	}
+}
