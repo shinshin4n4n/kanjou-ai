@@ -4,7 +4,7 @@ import { UPLOAD_LIMITS } from "@/lib/utils/constants";
 const parsedTransactionSchema = z.object({
 	date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 	description: z.string().min(1).max(200),
-	amount: z.number().int(),
+	amount: z.number(),
 	originalAmount: z.number().optional(),
 	originalCurrency: z.string().optional(),
 	exchangeRate: z.number().optional(),

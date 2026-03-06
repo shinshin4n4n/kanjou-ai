@@ -224,6 +224,28 @@ describe("importTransactions", () => {
 		);
 	});
 
+	it("小数金額がMath.roundで整数に丸められる", async () => {
+		mockAuthSuccess();
+		const { txInsertChain } = createImportMock({
+			logInsertResult: {
+				data: { id: "log-1", user_id: "user-123" },
+				error: null,
+			},
+		});
+
+		await importTransactions({
+			...validInput,
+			transactions: [
+				{ date: "2026-01-15", description: "小数テスト", amount: 1500.7 },
+				{ date: "2026-01-16", description: "負の小数テスト", amount: -2999.4 },
+			],
+		});
+
+		const insertedRows = txInsertChain.insert.mock.calls[0][0];
+		expect(insertedRows[0].amount).toBe(1501);
+		expect(insertedRows[1].amount).toBe(2999);
+	});
+
 	it("import_logがcompletedに更新される", async () => {
 		mockAuthSuccess();
 		const { logUpdateChain } = createImportMock({

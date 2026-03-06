@@ -45,7 +45,7 @@ export async function importTransactions(
 			user_id: userId,
 			transaction_date: tx.date,
 			description: tx.description,
-			amount: Math.abs(tx.amount),
+			amount: Math.round(Math.abs(tx.amount)),
 			debit_account: DEFAULT_DEBIT,
 			credit_account: DEFAULT_CREDIT,
 			source: "csv_import" as const,
