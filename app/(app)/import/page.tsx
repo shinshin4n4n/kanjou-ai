@@ -53,7 +53,10 @@ export default function ImportPage() {
 
 		setError(null);
 
-		if (!UPLOAD_LIMITS.ALLOWED_CSV_TYPES.includes(file.type) && !file.name.endsWith(".csv")) {
+		if (
+			!(UPLOAD_LIMITS.ALLOWED_CSV_TYPES as readonly string[]).includes(file.type) &&
+			!file.name.endsWith(".csv")
+		) {
 			setError("CSVファイルのみアップロードできます。");
 			resetFileInput();
 			return;
