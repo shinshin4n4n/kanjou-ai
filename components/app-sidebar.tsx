@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, LayoutDashboard, List, LogOut, Settings, Upload } from "lucide-react";
+import { BookOpen, Download, LayoutDashboard, List, LogOut, Settings, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/_actions/auth";
@@ -33,6 +33,11 @@ const navItems = [
 		label: "CSVインポート",
 		href: "/import",
 		icon: Upload,
+	},
+	{
+		label: "CSVエクスポート",
+		href: "/export",
+		icon: Download,
 	},
 	{
 		label: "設定",
