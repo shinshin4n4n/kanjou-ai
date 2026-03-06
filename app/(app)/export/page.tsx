@@ -16,11 +16,17 @@ import {
 } from "@/components/ui/select";
 import type { ExportRequestInput } from "@/lib/validators/transaction";
 
-const FORMAT_OPTIONS = [
-	{ value: "yayoi", label: "弥生" },
-	{ value: "freee", label: "freee" },
-	{ value: "generic", label: "汎用CSV" },
-] as const;
+const VALID_FORMATS = ["yayoi", "freee", "generic"] as const;
+
+const FORMAT_LABELS: Record<ExportRequestInput["format"], string> = {
+	yayoi: "弥生",
+	freee: "freee",
+	generic: "汎用CSV",
+};
+
+function isExportFormat(value: string): value is ExportRequestInput["format"] {
+	return (VALID_FORMATS as readonly string[]).includes(value);
+}
 
 export default function ExportPage() {
 	const today = new Date().toISOString().slice(0, 10);
@@ -72,15 +78,17 @@ export default function ExportPage() {
 						<Label htmlFor="format">出力形式</Label>
 						<Select
 							value={format}
-							onValueChange={(v) => setFormat(v as ExportRequestInput["format"])}
+							onValueChange={(v) => {
+								if (isExportFormat(v)) setFormat(v);
+							}}
 						>
 							<SelectTrigger id="format">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								{FORMAT_OPTIONS.map((opt) => (
-									<SelectItem key={opt.value} value={opt.value}>
-										{opt.label}
+								{VALID_FORMATS.map((f) => (
+									<SelectItem key={f} value={f}>
+										{FORMAT_LABELS[f]}
 									</SelectItem>
 								))}
 							</SelectContent>
