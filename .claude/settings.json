@@ -3,6 +3,9 @@
 		"allow": [
 			"Read",
 			"Edit",
+			"Write",
+			"WebFetch(*)",
+			"WebSearch",
 			"Bash(git *)",
 			"Bash(npm *)",
 			"Bash(npx *)",
@@ -10,8 +13,30 @@
 			"Bash(cat *)",
 			"Bash(ls *)",
 			"Bash(find *)",
-			"Bash(grep *)"
+			"Bash(grep *)",
+			"Bash(cp *)",
+			"Bash(mv *)",
+			"Bash(mkdir *)",
+			"Bash(rm *)",
+			"Bash(cd *)",
+			"Bash(echo *)",
+			"Bash(head *)",
+			"Bash(tail *)",
+			"Bash(wc *)",
+			"Bash(sed *)",
+			"Bash(sort *)",
+			"Bash(diff *)",
+			"Bash(export:*)",
+			"Bash(touch *)",
+			"Bash(chmod *)",
+			"Bash(npx tsc *)",
+			"Bash(npx eslint *)",
+			"Bash(npx prettier *)",
+			"Bash(node *)",
+			"Bash(pwd)",
+			"Bash(whoami)",
+			"Bash(which *)"
 		],
-		"deny": ["Bash(rm -rf /)", "Bash(curl * | bash)", "Bash(sudo *)"]
+		"deny": ["Bash(rm -rf *)", "Bash(curl * | bash)", "Bash(sudo *)"]
 	}
 }
