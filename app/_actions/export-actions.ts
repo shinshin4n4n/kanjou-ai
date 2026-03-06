@@ -26,6 +26,7 @@ export async function exportTransactions(
 		let query = supabase
 			.from("transactions")
 			.select("transaction_date, description, amount, debit_account, credit_account, tax_category")
+			.is("deleted_at", null)
 			.gte("transaction_date", startDate)
 			.lte("transaction_date", endDate);
 

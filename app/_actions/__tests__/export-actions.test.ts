@@ -46,7 +46,7 @@ function createExportMock(result: {
 	error: { code: string; message: string } | null;
 }) {
 	const chain: Record<string, ReturnType<typeof vi.fn>> = {};
-	for (const method of ["select", "gte", "lte", "eq"]) {
+	for (const method of ["select", "is", "gte", "lte", "eq"]) {
 		chain[method] = vi.fn().mockReturnValue(chain);
 	}
 	chain.order = vi.fn().mockResolvedValue(result);
@@ -124,6 +124,30 @@ describe("exportTransactions", () => {
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.code).toBe("EXPORT_ERROR");
+		}
+	});
+
+	it("deleted_atがnullのレコードのみ取得される", async () => {
+		mockAuthSuccess();
+		const { chain } = createExportMock({ data: sampleRows, error: null });
+
+		await exportTransactions(validInput);
+
+		expect(chain.is).toHaveBeenCalledWith("deleted_at", null);
+	});
+
+	it("startDateがendDateより後の場合VALIDATION_ERRORを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await exportTransactions({
+			...validInput,
+			startDate: "2026-02-01",
+			endDate: "2026-01-01",
+		});
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("VALIDATION_ERROR");
 		}
 	});
 
