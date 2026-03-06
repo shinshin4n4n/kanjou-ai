@@ -74,12 +74,17 @@ export const bulkConfirmSchema = z.object({
 
 export type BulkConfirmInput = z.infer<typeof bulkConfirmSchema>;
 
-export const exportRequestSchema = z.object({
-	format: z.enum(["yayoi", "freee", "generic"]),
-	startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-	endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-	confirmedOnly: z.boolean().default(true),
-});
+export const exportRequestSchema = z
+	.object({
+		format: z.enum(["yayoi", "freee", "generic"]),
+		startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+		endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+		confirmedOnly: z.boolean().default(true),
+	})
+	.refine((data) => data.startDate <= data.endDate, {
+		message: "開始日は終了日以前に設定してください",
+		path: ["endDate"],
+	});
 
 export type ExportRequestInput = z.infer<typeof exportRequestSchema>;
 
