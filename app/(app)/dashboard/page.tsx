@@ -57,7 +57,6 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mon
 
 	const { income, expense, balance, expenseBreakdown, unconfirmedCount, recentImports } =
 		result.data;
-	const totalExpense = expense || 1;
 
 	return (
 		<div className="flex flex-col gap-6 p-4 md:p-6">
@@ -124,7 +123,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mon
 						) : (
 							<div className="space-y-3">
 								{expenseBreakdown.map((item) => {
-									const ratio = Math.round((item.amount / totalExpense) * 100);
+									const ratio = expense > 0 ? Math.round((item.amount / expense) * 100) : 0;
 									return (
 										<div key={item.code} className="flex items-center gap-3">
 											<span className="w-24 text-sm truncate">{item.name}</span>

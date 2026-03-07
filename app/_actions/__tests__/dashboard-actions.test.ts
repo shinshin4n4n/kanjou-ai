@@ -56,14 +56,14 @@ function createSupabaseMock(
 	},
 ) {
 	const transactionsMock: Record<string, ReturnType<typeof vi.fn>> = {};
-	for (const method of ["select", "gte", "lte", "is"]) {
+	for (const method of ["select", "eq", "gte", "lte", "is"]) {
 		transactionsMock[method] = vi.fn().mockReturnValue(transactionsMock);
 	}
 	// Final method in chain resolves the result
 	transactionsMock.is = vi.fn().mockResolvedValue(transactionsResult);
 
 	const importLogsMock: Record<string, ReturnType<typeof vi.fn>> = {};
-	for (const method of ["select", "order"]) {
+	for (const method of ["select", "eq", "order"]) {
 		importLogsMock[method] = vi.fn().mockReturnValue(importLogsMock);
 	}
 	importLogsMock.limit = vi.fn().mockResolvedValue(importLogsResult);
@@ -206,6 +206,16 @@ describe("getDashboardData", () => {
 		expect(result.success).toBe(false);
 		if (result.success) return;
 		expect(result.code).toBe("UNAUTHORIZED");
+	});
+
+	it("不正な月フォーマットでVALIDATION_ERRORを返す", async () => {
+		mockAuthSuccess();
+
+		const result = await getDashboardData({ month: "invalid" });
+
+		expect(result.success).toBe(false);
+		if (result.success) return;
+		expect(result.code).toBe("VALIDATION_ERROR");
 	});
 
 	it("取引0件の場合、全て0/空配列を返す", async () => {

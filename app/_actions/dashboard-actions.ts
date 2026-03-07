@@ -1,11 +1,16 @@
 "use server";
 
 import { endOfMonth, parse, startOfMonth } from "date-fns";
+import { z } from "zod";
 import { handleApiError } from "@/lib/api/error";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/lib/types/api";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
+
+const dashboardParamsSchema = z.object({
+	month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "月はYYYY-MM形式で入力してください"),
+});
 
 type DashboardData = {
 	month: string;
@@ -34,14 +39,25 @@ export async function getDashboardData(params: {
 		const authResult = await requireAuth();
 		if (!authResult.success) return authResult;
 
+		const parsed = dashboardParamsSchema.safeParse(params);
+		if (!parsed.success) {
+			return {
+				success: false,
+				error: "月はYYYY-MM形式で入力してください。",
+				code: "VALIDATION_ERROR",
+			};
+		}
+
 		const supabase = await createClient();
-		const monthDate = parse(params.month, "yyyy-MM", new Date());
+		const userId = authResult.data.id;
+		const monthDate = parse(parsed.data.month, "yyyy-MM", new Date());
 		const monthStart = startOfMonth(monthDate).toISOString().split("T")[0];
 		const monthEnd = endOfMonth(monthDate).toISOString().split("T")[0];
 
 		const { data: transactions, error: txError } = await supabase
 			.from("transactions")
 			.select("amount, debit_account, credit_account, is_confirmed")
+			.eq("user_id", userId)
 			.gte("transaction_date", monthStart)
 			.lte("transaction_date", monthEnd)
 			.is("deleted_at", null);
@@ -80,6 +96,7 @@ export async function getDashboardData(params: {
 		const { data: importLogs, error: importError } = await supabase
 			.from("import_logs")
 			.select("id, file_name, status, row_count, created_at")
+			.eq("user_id", userId)
 			.order("created_at", { ascending: false })
 			.limit(5);
 
@@ -96,7 +113,7 @@ export async function getDashboardData(params: {
 		return {
 			success: true,
 			data: {
-				month: params.month,
+				month: parsed.data.month,
 				income,
 				expense,
 				balance: income - expense,
