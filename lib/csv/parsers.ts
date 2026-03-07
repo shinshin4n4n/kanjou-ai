@@ -45,9 +45,8 @@ export const wiseRowSchema = z.object({
 });
 
 /**
- * Revolut CSV カラム定義
+ * Revolut CSV カラム定義（英語版）
  * columns: Date, Description, Amount, Currency, Balance
- * Note: UTC/ローカル時刻の両方が含まれる場合あり
  */
 export const revolutRowSchema = z.object({
 	Date: z.string().min(1),
@@ -55,6 +54,20 @@ export const revolutRowSchema = z.object({
 	Amount: z.string().min(1),
 	Currency: z.string().min(1),
 	Balance: z.string().optional(),
+});
+
+/**
+ * Revolut CSV カラム定義（日本語版）
+ * columns: 種類, サービス, 開始日, 完了日, お取引, 金額, 手数料, 通貨, 状態, 残高
+ */
+export const revolutRowSchemaJa = z.object({
+	開始日: z.string().min(1),
+	お取引: z.string().min(1),
+	金額: z.string().min(1),
+	通貨: z.string().min(1),
+	残高: z.string().optional(),
+	状態: z.string().optional(),
+	手数料: z.string().optional(),
 });
 
 /**
@@ -81,7 +94,16 @@ export function detectCsvFormat(headers: string[]): CsvFormat {
 		return "rakuten";
 	}
 
-	// Revolut: Date, Description, Amount, Currency, Balance の組み合わせ
+	// Revolut（日本語版）: お取引, 金額, 通貨 の組み合わせ
+	if (
+		headers.some((h) => h.trim() === "お取引") &&
+		headers.some((h) => h.trim() === "金額") &&
+		headers.some((h) => h.trim() === "通貨")
+	) {
+		return "revolut";
+	}
+
+	// Revolut（英語版）: Date, Description, Amount, Currency, Balance の組み合わせ
 	if (
 		normalized.includes("date") &&
 		normalized.includes("description") &&
@@ -321,12 +343,14 @@ export function parseWiseCsv(csvText: string): ParsedTransaction[] {
 
 /**
  * Revolut CSVをパースして統一取引データに変換
+ * 英語版・日本語版の両方に対応
  */
 export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
 	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
 	const headers = splitCsvLine(lines[0]);
+	const isJapanese = headers.some((h) => h.trim() === "お取引");
 	const transactions: ParsedTransaction[] = [];
 
 	for (let i = 1; i < lines.length; i++) {
@@ -336,19 +360,37 @@ export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
 			row[headers[j]] = columns[j] ?? "";
 		}
 
-		const parsed = revolutRowSchema.safeParse(row);
-		if (!parsed.success) continue;
-
-		const data = parsed.data;
-		try {
-			transactions.push({
-				date: normalizeDate(data.Date),
-				description: data.Description,
-				amount: parseAmount(data.Amount),
-				originalCurrency: data.Currency,
-			});
-		} catch {
-			// 金額パースエラー時はスキップ
+		if (isJapanese) {
+			const parsed = revolutRowSchemaJa.safeParse(row);
+			if (!parsed.success) continue;
+			const data = parsed.data;
+			if (data.状態 && data.状態 !== "完了済み") continue;
+			try {
+				const fees = data.手数料 ? parseAmount(data.手数料) : 0;
+				transactions.push({
+					date: normalizeDate(data.開始日),
+					description: data.お取引,
+					amount: parseAmount(data.金額),
+					originalCurrency: data.通貨,
+					fees: fees !== 0 ? fees : undefined,
+				});
+			} catch {
+				// 金額パースエラー時はスキップ
+			}
+		} else {
+			const parsed = revolutRowSchema.safeParse(row);
+			if (!parsed.success) continue;
+			const data = parsed.data;
+			try {
+				transactions.push({
+					date: normalizeDate(data.Date),
+					description: data.Description,
+					amount: parseAmount(data.Amount),
+					originalCurrency: data.Currency,
+				});
+			} catch {
+				// 金額パースエラー時はスキップ
+			}
 		}
 	}
 
