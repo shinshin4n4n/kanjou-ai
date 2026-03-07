@@ -38,6 +38,22 @@ describe("CSV パーサー", () => {
 			const headers = ["date", "description", "amount", "currency", "balance"];
 			expect(detectCsvFormat(headers)).toBe("revolut");
 		});
+
+		it("日本語版 Revolut ヘッダーを検出する", () => {
+			const headers = [
+				"種類",
+				"サービス",
+				"開始日",
+				"完了日",
+				"お取引",
+				"金額",
+				"手数料",
+				"通貨",
+				"状態",
+				"残高",
+			];
+			expect(detectCsvFormat(headers)).toBe("revolut");
+		});
 	});
 
 	describe("normalizeDate", () => {
@@ -341,6 +357,50 @@ describe("CSV パーサー", () => {
 		});
 	});
 
+	describe("parseRevolutCsv（日本語版）", () => {
+		const revolutJaCsv = [
+			"種類,サービス,開始日,完了日,お取引,金額,手数料,通貨,状態,残高",
+			"カード支払い,当座,2025-01-01 05:07:13,2025-01-02 22:11:53,Emart K.w Sepang,-1751,0,JPY,完了済み,109592",
+			"チャージ,当座,2025-01-03 12:45:36,2025-01-03 12:47:46,*9092によるチャージ,100000,0,JPY,完了済み,198171",
+		].join("\n");
+
+		it("日本語版CSVをパースして取引一覧を返す", () => {
+			const result = parseRevolutCsv(revolutJaCsv);
+			expect(result).toHaveLength(2);
+			expect(result[0].description).toBe("Emart K.w Sepang");
+			expect(result[0].amount).toBe(-1751);
+			expect(result[0].originalCurrency).toBe("JPY");
+		});
+
+		it("日付（YYYY-MM-DD HH:MM:SS）をYYYY-MM-DDに正規化する", () => {
+			const result = parseRevolutCsv(revolutJaCsv);
+			expect(result[0].date).toBe("2025-01-01");
+			expect(result[1].date).toBe("2025-01-03");
+		});
+
+		it("「差し戻された」ステータスの行をスキップする", () => {
+			const csvWithReverted = [
+				"種類,サービス,開始日,完了日,お取引,金額,手数料,通貨,状態,残高",
+				"カード支払い,当座,2025-01-02 14:19:47,,Grab,-36,0,JPY,差し戻された,",
+				"カード支払い,当座,2025-01-01 05:07:13,2025-01-02 22:11:53,Emart,-1751,0,JPY,完了済み,109592",
+			].join("\n");
+			const result = parseRevolutCsv(csvWithReverted);
+			expect(result).toHaveLength(1);
+			expect(result[0].description).toBe("Emart");
+		});
+
+		it("手数料が0以外の場合feesにマッピングする", () => {
+			const csvWithFees = [
+				"種類,サービス,開始日,完了日,お取引,金額,手数料,通貨,状態,残高",
+				"カード支払い,当座,2025-01-01 05:07:13,2025-01-02 22:11:53,Transfer,-5000,150,JPY,完了済み,100000",
+				"カード支払い,当座,2025-01-01 06:00:00,2025-01-02 22:11:53,Netflix,-1500,0,JPY,完了済み,98500",
+			].join("\n");
+			const result = parseRevolutCsv(csvWithFees);
+			expect(result[0].fees).toBe(150);
+			expect(result[1].fees).toBeUndefined();
+		});
+	});
+
 	describe("parseGenericCsv", () => {
 		const genericCsv = [
 			"date,description,amount",
@@ -411,6 +471,16 @@ describe("CSV パーサー", () => {
 			const result = parseCsv("");
 			expect(result.format).toBe("generic");
 			expect(result.transactions).toEqual([]);
+		});
+
+		it("日本語版 Revolut CSVを自動判定してパースする", () => {
+			const revolutJaCsv = [
+				"種類,サービス,開始日,完了日,お取引,金額,手数料,通貨,状態,残高",
+				"カード支払い,当座,2025-01-01 05:07:13,2025-01-02 22:11:53,Netflix,-1500,0,JPY,完了済み,48500",
+			].join("\n");
+			const result = parseCsv(revolutJaCsv);
+			expect(result.format).toBe("revolut");
+			expect(result.transactions).toHaveLength(1);
 		});
 	});
 });

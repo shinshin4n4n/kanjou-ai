@@ -13,3 +13,4 @@ npm-debug.log*
 supabase/.temp/
 .claude/settings.local.json
 .vercel
+tmp/
