@@ -41,21 +41,23 @@ export async function importTransactions(
 
 		if (logError) return handleApiError(logError);
 
-		const rows = parsed.data.transactions.map((tx) => ({
-			user_id: userId,
-			transaction_date: tx.date,
-			description: tx.description,
-			amount: Math.round(Math.abs(tx.amount)),
-			debit_account: DEFAULT_DEBIT,
-			credit_account: DEFAULT_CREDIT,
-			source: "csv_import" as const,
-			import_log_id: importLog.id,
-			is_confirmed: false,
-			original_amount: tx.originalAmount ?? null,
-			original_currency: tx.originalCurrency ?? null,
-			exchange_rate: tx.exchangeRate ?? null,
-			fees: tx.fees ?? null,
-		}));
+		const rows = parsed.data.transactions
+			.map((tx) => ({
+				user_id: userId,
+				transaction_date: tx.date,
+				description: tx.description,
+				amount: Math.round(Math.abs(tx.amount)),
+				debit_account: DEFAULT_DEBIT,
+				credit_account: DEFAULT_CREDIT,
+				source: "csv_import" as const,
+				import_log_id: importLog.id,
+				is_confirmed: false,
+				original_amount: tx.originalAmount ?? null,
+				original_currency: tx.originalCurrency ?? null,
+				exchange_rate: tx.exchangeRate ?? null,
+				fees: tx.fees ?? null,
+			}))
+			.filter((row) => row.amount > 0);
 
 		const { error: insertError } = await supabase.from("transactions").insert(rows);
 
