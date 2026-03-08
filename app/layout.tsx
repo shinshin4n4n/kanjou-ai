@@ -15,9 +15,28 @@ const geistMono = Geist_Mono({
 	variable: "--font-mono",
 });
 
+const description =
+	"フリーランスの確定申告仕訳をAIで一括処理。CSV取込、勘定科目自動推定、弥生・freee形式エクスポート対応。";
+
 export const metadata: Metadata = {
+	metadataBase: new URL("https://kanjou-ai.vercel.app"),
 	title: "KanjouAI - AI仕訳管理",
-	description: "確定申告のための仕訳管理Webアプリ。取引入力、CSV取込、勘定科目別集計を簡単に。",
+	description,
+	keywords: ["確定申告", "仕訳", "AI", "フリーランス", "会計", "CSV", "勘定科目"],
+	authors: [{ name: "KanjouAI" }],
+	openGraph: {
+		title: "KanjouAI - AI仕訳管理",
+		description,
+		url: "https://kanjou-ai.vercel.app",
+		siteName: "KanjouAI",
+		locale: "ja_JP",
+		type: "website",
+	},
+	twitter: {
+		card: "summary",
+		title: "KanjouAI - AI仕訳管理",
+		description,
+	},
 };
 
 export const viewport: Viewport = {
