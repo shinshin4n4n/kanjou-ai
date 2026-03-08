@@ -4,7 +4,7 @@ test.describe("CSV Export", () => {
 	test("should display export page with form", async ({ page }) => {
 		await page.goto("/export");
 
-		await expect(page.getByText("CSVエクスポート")).toBeVisible();
+		await expect(page.getByRole("main").getByText("CSVエクスポート")).toBeVisible();
 		await expect(page.locator("#format")).toBeVisible();
 		await expect(page.locator("#startDate")).toBeVisible();
 		await expect(page.locator("#endDate")).toBeVisible();

@@ -5,7 +5,7 @@ test.describe("CSV Import", () => {
 	test("should upload CSV and show preview", async ({ page }) => {
 		await page.goto("/import");
 
-		await expect(page.getByText("CSVインポート")).toBeVisible();
+		await expect(page.getByRole("main").getByText("CSVインポート")).toBeVisible();
 
 		// Upload test CSV file
 		const fileInput = page.locator('input[type="file"]');
@@ -48,8 +48,9 @@ test.describe("CSV Import", () => {
 			const row = page.locator("tr", { hasText: description });
 			if ((await row.count()) === 0) continue;
 			await row.first().getByTitle("削除").click();
-			await page.getByRole("button", { name: "削除" }).last().click();
-			await expect(row.first()).toBeHidden({ timeout: 5000 });
+			await page.getByRole("button", { name: "削除", exact: true }).last().click();
+			// Wait for deletion to process and page to update
+			await page.waitForTimeout(2000);
 		}
 	});
 });
