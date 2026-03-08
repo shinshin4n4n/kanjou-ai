@@ -22,7 +22,7 @@ test.describe("AI Classification", () => {
 		await expect(page.getByRole("button", { name: "AI推定" })).toBeVisible();
 	});
 
-	test("should trigger AI classification and show dialog", async ({ page }) => {
+	test("should trigger AI classification", async ({ page }) => {
 		await page.goto("/transactions");
 
 		const checkboxes = page.locator('button[role="checkbox"]');

@@ -41,19 +41,22 @@ test.describe("CSV Export", () => {
 
 		await page.getByRole("button", { name: "ダウンロード" }).click();
 
-		// Verify a file was downloaded (or an error was shown if no data)
+		// Verify either a file download or an error message is shown
+		// (export may produce no file if there are no confirmed transactions)
 		try {
 			const download = await downloadPromise;
 			expect(download.suggestedFilename()).toMatch(/^kanjou-.*\.csv$/);
 		} catch {
-			// If no download occurred, check for an error message
-			// (export may fail if there are no confirmed transactions)
-			const errorMsg = page.locator(".text-destructive");
-			const hasError = await errorMsg.isVisible().catch(() => false);
-			if (!hasError) {
-				// Button might have shown loading state then completed with no data
-				expect(true).toBe(true);
-			}
+			// No download occurred — verify the UI shows an error or returns to idle state
+			const hasError = await page
+				.locator(".text-destructive")
+				.isVisible()
+				.catch(() => false);
+			const buttonIdle = await page
+				.getByRole("button", { name: "ダウンロード" })
+				.isEnabled()
+				.catch(() => false);
+			expect(hasError || buttonIdle).toBe(true);
 		}
 	});
 });

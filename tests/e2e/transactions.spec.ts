@@ -26,5 +26,11 @@ test.describe("Transactions", () => {
 
 		// Verify the created transaction appears in the list
 		await expect(page.getByText(testDescription)).toBeVisible();
+
+		// Cleanup: delete the created test transaction
+		const row = page.locator("tr", { hasText: testDescription });
+		await row.getByTitle("削除").click();
+		await page.getByRole("button", { name: "削除" }).last().click();
+		await expect(row).toBeHidden({ timeout: 5000 });
 	});
 });

@@ -39,5 +39,17 @@ test.describe("CSV Import", () => {
 			timeout: 15000,
 		});
 		await expect(page.getByText("3件の取引をインポートしました")).toBeVisible();
+
+		// Cleanup: navigate to transactions and delete imported test data
+		await page.getByRole("link", { name: "取引一覧を見る" }).click();
+		await page.waitForURL("**/transactions");
+
+		for (const description of ["E2Eテスト通信費", "E2Eテスト交通費", "E2Eテスト消耗品"]) {
+			const row = page.locator("tr", { hasText: description });
+			if ((await row.count()) === 0) continue;
+			await row.first().getByTitle("削除").click();
+			await page.getByRole("button", { name: "削除" }).last().click();
+			await expect(row.first()).toBeHidden({ timeout: 5000 });
+		}
 	});
 });
