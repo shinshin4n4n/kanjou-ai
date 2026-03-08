@@ -366,11 +366,13 @@ export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
 			const data = parsed.data;
 			if (data.状態 && data.状態 !== "完了済み") continue;
 			try {
+				const amount = parseAmount(data.金額);
+				if (amount === 0) continue;
 				const fees = data.手数料 ? parseAmount(data.手数料) : 0;
 				transactions.push({
 					date: normalizeDate(data.開始日),
 					description: data.お取引,
-					amount: parseAmount(data.金額),
+					amount,
 					originalCurrency: data.通貨,
 					fees: fees !== 0 ? fees : undefined,
 				});
@@ -382,10 +384,12 @@ export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
 			if (!parsed.success) continue;
 			const data = parsed.data;
 			try {
+				const amount = parseAmount(data.Amount);
+				if (amount === 0) continue;
 				transactions.push({
 					date: normalizeDate(data.Date),
 					description: data.Description,
-					amount: parseAmount(data.Amount),
+					amount,
 					originalCurrency: data.Currency,
 				});
 			} catch {

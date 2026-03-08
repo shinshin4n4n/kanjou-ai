@@ -355,6 +355,17 @@ describe("CSV パーサー", () => {
 			const result = parseRevolutCsv(csvWithBadAmount);
 			expect(result).toHaveLength(1);
 		});
+
+		it("金額0の行をスキップする", () => {
+			const csvWithZeroAmount = [
+				"Date,Description,Amount,Currency,Balance",
+				"15-01-2025,Premium Plan Fee,0,JPY,48500",
+				"20-01-2025,Netflix,-1500,JPY,47000",
+			].join("\n");
+			const result = parseRevolutCsv(csvWithZeroAmount);
+			expect(result).toHaveLength(1);
+			expect(result[0].description).toBe("Netflix");
+		});
 	});
 
 	describe("parseRevolutCsv（日本語版）", () => {
@@ -387,6 +398,17 @@ describe("CSV パーサー", () => {
 			const result = parseRevolutCsv(csvWithReverted);
 			expect(result).toHaveLength(1);
 			expect(result[0].description).toBe("Emart");
+		});
+
+		it("金額0の行をスキップする", () => {
+			const csvWithZeroAmount = [
+				"種類,サービス,開始日,完了日,お取引,金額,手数料,通貨,状態,残高",
+				"請求,当座,2025-06-01 11:48:33,2025-06-01 11:48:33,プレミアムプランの手数料,0,980,JPY,完了済み,184604",
+				"カード支払い,当座,2025-01-01 05:07:13,2025-01-02 22:11:53,Netflix,-1500,0,JPY,完了済み,98500",
+			].join("\n");
+			const result = parseRevolutCsv(csvWithZeroAmount);
+			expect(result).toHaveLength(1);
+			expect(result[0].description).toBe("Netflix");
 		});
 
 		it("手数料が0以外の場合feesにマッピングする", () => {

@@ -246,6 +246,59 @@ describe("importTransactions", () => {
 		expect(insertedRows[1].amount).toBe(2999);
 	});
 
+	it("金額0の取引をINSERT前にフィルタして除外する", async () => {
+		mockAuthSuccess();
+		const { txInsertChain, logUpdateChain } = createImportMock({
+			logInsertResult: {
+				data: { id: "log-1", user_id: "user-123" },
+				error: null,
+			},
+		});
+
+		await importTransactions({
+			...validInput,
+			transactions: [
+				{ date: "2026-01-15", description: "正常取引", amount: 1000 },
+				{ date: "2026-01-16", description: "金額ゼロ", amount: 0 },
+				{ date: "2026-01-17", description: "負の金額", amount: -500 },
+			],
+		});
+
+		const insertedRows = txInsertChain.insert.mock.calls[0][0];
+		expect(insertedRows).toHaveLength(2);
+		expect(insertedRows.every((r: { amount: number }) => r.amount > 0)).toBe(true);
+		expect(logUpdateChain.update).toHaveBeenCalledWith(
+			expect.objectContaining({ success_count: 2 }),
+		);
+	});
+
+	it("全取引が金額0の場合INSERTせずcompleted/importedCount:0を返す", async () => {
+		mockAuthSuccess();
+		const { txInsertChain, logUpdateChain } = createImportMock({
+			logInsertResult: {
+				data: { id: "log-1", user_id: "user-123" },
+				error: null,
+			},
+		});
+
+		const result = await importTransactions({
+			...validInput,
+			transactions: [
+				{ date: "2026-01-15", description: "金額ゼロ1", amount: 0 },
+				{ date: "2026-01-16", description: "金額ゼロ2", amount: 0 },
+			],
+		});
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.importedCount).toBe(0);
+		}
+		expect(txInsertChain.insert).not.toHaveBeenCalled();
+		expect(logUpdateChain.update).toHaveBeenCalledWith(
+			expect.objectContaining({ status: "completed", success_count: 0 }),
+		);
+	});
+
 	it("import_logがcompletedに更新される", async () => {
 		mockAuthSuccess();
 		const { logUpdateChain } = createImportMock({
