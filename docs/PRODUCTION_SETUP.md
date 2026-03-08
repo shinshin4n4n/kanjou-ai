@@ -17,8 +17,8 @@ npx supabase link --project-ref <PROJECT_REF>
 # マイグレーション適用
 npx supabase db push
 
-# シードデータ投入
-npx supabase db reset --linked
+# シードデータ投入（初回のみ。既存データがある場合は実行しない）
+psql "$SUPABASE_DB_URL" -f supabase/seed.sql
 ```
 
 ### RLS 確認
