@@ -355,6 +355,17 @@ describe("CSV パーサー", () => {
 			const result = parseRevolutCsv(csvWithBadAmount);
 			expect(result).toHaveLength(1);
 		});
+
+		it("金額0の行をスキップする", () => {
+			const csvWithZeroAmount = [
+				"Date,Description,Amount,Currency,Balance",
+				"15-01-2025,Premium Plan Fee,0,JPY,48500",
+				"20-01-2025,Netflix,-1500,JPY,47000",
+			].join("\n");
+			const result = parseRevolutCsv(csvWithZeroAmount);
+			expect(result).toHaveLength(1);
+			expect(result[0].description).toBe("Netflix");
+		});
 	});
 
 	describe("parseRevolutCsv（日本語版）", () => {

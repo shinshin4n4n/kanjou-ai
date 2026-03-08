@@ -272,6 +272,33 @@ describe("importTransactions", () => {
 		);
 	});
 
+	it("全取引が金額0の場合INSERTせずcompleted/importedCount:0を返す", async () => {
+		mockAuthSuccess();
+		const { txInsertChain, logUpdateChain } = createImportMock({
+			logInsertResult: {
+				data: { id: "log-1", user_id: "user-123" },
+				error: null,
+			},
+		});
+
+		const result = await importTransactions({
+			...validInput,
+			transactions: [
+				{ date: "2026-01-15", description: "金額ゼロ1", amount: 0 },
+				{ date: "2026-01-16", description: "金額ゼロ2", amount: 0 },
+			],
+		});
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.importedCount).toBe(0);
+		}
+		expect(txInsertChain.insert).not.toHaveBeenCalled();
+		expect(logUpdateChain.update).toHaveBeenCalledWith(
+			expect.objectContaining({ status: "completed", success_count: 0 }),
+		);
+	});
+
 	it("import_logがcompletedに更新される", async () => {
 		mockAuthSuccess();
 		const { logUpdateChain } = createImportMock({

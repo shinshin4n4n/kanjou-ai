@@ -384,10 +384,12 @@ export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
 			if (!parsed.success) continue;
 			const data = parsed.data;
 			try {
+				const amount = parseAmount(data.Amount);
+				if (amount === 0) continue;
 				transactions.push({
 					date: normalizeDate(data.Date),
 					description: data.Description,
-					amount: parseAmount(data.Amount),
+					amount,
 					originalCurrency: data.Currency,
 				});
 			} catch {

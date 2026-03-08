@@ -59,6 +59,18 @@ export async function importTransactions(
 			}))
 			.filter((row) => row.amount > 0);
 
+		if (rows.length === 0) {
+			await supabase
+				.from("import_logs")
+				.update({ status: "completed", success_count: 0 })
+				.eq("id", importLog.id);
+			revalidatePath("/transactions");
+			return {
+				success: true,
+				data: { importLogId: importLog.id, importedCount: 0 },
+			};
+		}
+
 		const { error: insertError } = await supabase.from("transactions").insert(rows);
 
 		if (insertError) {
