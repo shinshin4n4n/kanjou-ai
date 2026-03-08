@@ -49,7 +49,7 @@ export const AI_CONFIDENCE = {
 export const UPLOAD_LIMITS = {
 	MAX_FILE_SIZE: 5 * 1024 * 1024,
 	ALLOWED_CSV_TYPES: ["text/csv", "application/vnd.ms-excel"],
-	MAX_ROWS_PER_IMPORT: 1000,
+	MAX_ROWS_PER_IMPORT: 2500,
 } as const;
 
 export const RATE_LIMITS = {

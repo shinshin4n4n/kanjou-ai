@@ -135,9 +135,9 @@ describe("importTransactions", () => {
 		}
 	});
 
-	it("1001件超過でバリデーションエラーを返す", async () => {
+	it("2501件超過でバリデーションエラーを返す", async () => {
 		mockAuthSuccess();
-		const tooMany = Array.from({ length: 1001 }, (_, i) => ({
+		const tooMany = Array.from({ length: 2501 }, (_, i) => ({
 			date: "2026-01-01",
 			description: `取引${i}`,
 			amount: 100,
