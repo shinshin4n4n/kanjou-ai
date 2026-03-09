@@ -120,7 +120,7 @@ git diff --stat main...HEAD | tail -1
 ### Test Coverage
 
 - [ ] Statements: 80%以上
-- [ ] Branches: 75%以上
+- [ ] Branches: 80%以上
 - [ ] Functions: 80%以上
 - [ ] Lines: 80%以上
 
