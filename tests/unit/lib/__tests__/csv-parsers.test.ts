@@ -148,18 +148,18 @@ describe("CSV パーサー", () => {
 
 		it("日付をYYYY-MM-DD形式に正規化する", () => {
 			const result = parseRakutenCsv(rakutenCsv);
-			expect(result[0].date).toBe("2025-01-15");
+			expect(result[0]!.date).toBe("2025-01-15");
 		});
 
 		it("利用店名をdescriptionにマッピングする", () => {
 			const result = parseRakutenCsv(rakutenCsv);
-			expect(result[0].description).toBe("Amazon.co.jp");
+			expect(result[0]!.description).toBe("Amazon.co.jp");
 		});
 
 		it("利用金額を整数にパースする", () => {
 			const result = parseRakutenCsv(rakutenCsv);
-			expect(result[0].amount).toBe(3500);
-			expect(result[1].amount).toBe(850);
+			expect(result[0]!.amount).toBe(3500);
+			expect(result[1]!.amount).toBe(850);
 		});
 
 		it("空行を無視する", () => {
@@ -185,7 +185,7 @@ describe("CSV パーサー", () => {
 			].join("\r\n");
 			const result = parseRakutenCsv(crlfCsv);
 			expect(result).toHaveLength(1);
-			expect(result[0].amount).toBe(3500);
+			expect(result[0]!.amount).toBe(3500);
 		});
 
 		it('エスケープクォート（""）を単一の"に変換する', () => {
@@ -194,7 +194,7 @@ describe("CSV パーサー", () => {
 				'"2025/01/15","Amazon ""プライム""","本人","1回払い","500","0","500"',
 			].join("\n");
 			const result = parseRakutenCsv(csvWithEscaped);
-			expect(result[0].description).toBe('Amazon "プライム"');
+			expect(result[0]!.description).toBe('Amazon "プライム"');
 		});
 	});
 
@@ -238,18 +238,18 @@ describe("CSV パーサー", () => {
 
 		it("日付をYYYY-MM-DD形式に正規化する", () => {
 			const result = parseSmbcCsv(smbcCsv);
-			expect(result[0].date).toBe("2025-01-15");
+			expect(result[0]!.date).toBe("2025-01-15");
 		});
 
 		it("利用先をdescriptionにマッピングする", () => {
 			const result = parseSmbcCsv(smbcCsv);
-			expect(result[0].description).toBe("Amazon.co.jp");
+			expect(result[0]!.description).toBe("Amazon.co.jp");
 		});
 
 		it("利用金額を整数にパースする", () => {
 			const result = parseSmbcCsv(smbcCsv);
-			expect(result[0].amount).toBe(5000);
-			expect(result[1].amount).toBe(850);
+			expect(result[0]!.amount).toBe(5000);
+			expect(result[1]!.amount).toBe(850);
 		});
 
 		it("1行目（契約者情報）をスキップする", () => {
@@ -285,7 +285,7 @@ describe("CSV パーサー", () => {
 			const crlfCsv = ["太郎,1234", "2025/01/15,Amazon.co.jp,5000,1回,5000,,,"].join("\r\n");
 			const result = parseSmbcCsv(crlfCsv);
 			expect(result).toHaveLength(1);
-			expect(result[0].amount).toBe(5000);
+			expect(result[0]!.amount).toBe(5000);
 		});
 	});
 
@@ -299,13 +299,13 @@ describe("CSV パーサー", () => {
 		it("Wise CSVをパースして取引一覧を返す", () => {
 			const result = parseWiseCsv(wiseCsv);
 			expect(result).toHaveLength(2);
-			expect(result[0].date).toBe("2025-01-15");
-			expect(result[0].amount).toBe(-50);
-			expect(result[0].originalCurrency).toBe("GBP");
-			expect(result[0].exchangeRate).toBe(190.5);
-			expect(result[0].payeeName).toBe("John Doe");
-			expect(result[0].reference).toBe("REF001");
-			expect(result[0].fees).toBe(3);
+			expect(result[0]!.date).toBe("2025-01-15");
+			expect(result[0]!.amount).toBe(-50);
+			expect(result[0]!.originalCurrency).toBe("GBP");
+			expect(result[0]!.exchangeRate).toBe(190.5);
+			expect(result[0]!.payeeName).toBe("John Doe");
+			expect(result[0]!.reference).toBe("REF001");
+			expect(result[0]!.fees).toBe(3);
 		});
 
 		it("データ行が無い場合は空配列を返す", () => {
@@ -335,10 +335,10 @@ describe("CSV パーサー", () => {
 		it("Revolut CSVをパースして取引一覧を返す", () => {
 			const result = parseRevolutCsv(revolutCsv);
 			expect(result).toHaveLength(2);
-			expect(result[0].date).toBe("2025-01-15");
-			expect(result[0].description).toBe("Netflix");
-			expect(result[0].amount).toBe(-1500);
-			expect(result[0].originalCurrency).toBe("JPY");
+			expect(result[0]!.date).toBe("2025-01-15");
+			expect(result[0]!.description).toBe("Netflix");
+			expect(result[0]!.amount).toBe(-1500);
+			expect(result[0]!.originalCurrency).toBe("JPY");
 		});
 
 		it("データ行が無い場合は空配列を返す", () => {
@@ -364,7 +364,7 @@ describe("CSV パーサー", () => {
 			].join("\n");
 			const result = parseRevolutCsv(csvWithZeroAmount);
 			expect(result).toHaveLength(1);
-			expect(result[0].description).toBe("Netflix");
+			expect(result[0]!.description).toBe("Netflix");
 		});
 	});
 
@@ -378,15 +378,15 @@ describe("CSV パーサー", () => {
 		it("日本語版CSVをパースして取引一覧を返す", () => {
 			const result = parseRevolutCsv(revolutJaCsv);
 			expect(result).toHaveLength(2);
-			expect(result[0].description).toBe("Emart K.w Sepang");
-			expect(result[0].amount).toBe(-1751);
-			expect(result[0].originalCurrency).toBe("JPY");
+			expect(result[0]!.description).toBe("Emart K.w Sepang");
+			expect(result[0]!.amount).toBe(-1751);
+			expect(result[0]!.originalCurrency).toBe("JPY");
 		});
 
 		it("日付（YYYY-MM-DD HH:MM:SS）をYYYY-MM-DDに正規化する", () => {
 			const result = parseRevolutCsv(revolutJaCsv);
-			expect(result[0].date).toBe("2025-01-01");
-			expect(result[1].date).toBe("2025-01-03");
+			expect(result[0]!.date).toBe("2025-01-01");
+			expect(result[1]!.date).toBe("2025-01-03");
 		});
 
 		it("「差し戻された」ステータスの行をスキップする", () => {
@@ -397,7 +397,7 @@ describe("CSV パーサー", () => {
 			].join("\n");
 			const result = parseRevolutCsv(csvWithReverted);
 			expect(result).toHaveLength(1);
-			expect(result[0].description).toBe("Emart");
+			expect(result[0]!.description).toBe("Emart");
 		});
 
 		it("金額0の行をスキップする", () => {
@@ -408,7 +408,7 @@ describe("CSV パーサー", () => {
 			].join("\n");
 			const result = parseRevolutCsv(csvWithZeroAmount);
 			expect(result).toHaveLength(1);
-			expect(result[0].description).toBe("Netflix");
+			expect(result[0]!.description).toBe("Netflix");
 		});
 
 		it("手数料が0以外の場合feesにマッピングする", () => {
@@ -418,8 +418,8 @@ describe("CSV パーサー", () => {
 				"カード支払い,当座,2025-01-01 06:00:00,2025-01-02 22:11:53,Netflix,-1500,0,JPY,完了済み,98500",
 			].join("\n");
 			const result = parseRevolutCsv(csvWithFees);
-			expect(result[0].fees).toBe(150);
-			expect(result[1].fees).toBeUndefined();
+			expect(result[0]!.fees).toBe(150);
+			expect(result[1]!.fees).toBeUndefined();
 		});
 	});
 
@@ -433,9 +433,9 @@ describe("CSV パーサー", () => {
 		it("汎用CSVをパースして取引一覧を返す", () => {
 			const result = parseGenericCsv(genericCsv);
 			expect(result).toHaveLength(2);
-			expect(result[0].date).toBe("2025-01-15");
-			expect(result[0].description).toBe("通信費");
-			expect(result[0].amount).toBe(5000);
+			expect(result[0]!.date).toBe("2025-01-15");
+			expect(result[0]!.description).toBe("通信費");
+			expect(result[0]!.amount).toBe(5000);
 		});
 
 		it("データ行が無い場合は空配列を返す", () => {

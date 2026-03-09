@@ -134,7 +134,7 @@ describe("getClassificationRules", () => {
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data).toHaveLength(1);
-			expect(result.data[0].instruction).toBe("AWSの利用料は通信費にしてください");
+			expect(result.data[0]!.instruction).toBe("AWSの利用料は通信費にしてください");
 		}
 	});
 

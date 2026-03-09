@@ -122,7 +122,7 @@ describe("AiClassifyDialog ルール保存エラーハンドリング", () => {
 			return btn.querySelector("svg.lucide-x") !== null;
 		});
 		expect(deleteButtons.length).toBeGreaterThan(0);
-		fireEvent.click(deleteButtons[0]);
+		fireEvent.click(deleteButtons[0]!);
 
 		await waitFor(() => {
 			expect(mockToast).toHaveBeenCalledWith(
@@ -152,7 +152,7 @@ describe("AiClassifyDialog ルール保存エラーハンドリング", () => {
 		const deleteButtons = screen.getAllByRole("button").filter((btn) => {
 			return btn.querySelector("svg.lucide-x") !== null;
 		});
-		fireEvent.click(deleteButtons[0]);
+		fireEvent.click(deleteButtons[0]!);
 
 		await waitFor(() => {
 			expect(mockToast).toHaveBeenCalledWith(

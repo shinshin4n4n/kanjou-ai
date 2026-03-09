@@ -124,14 +124,14 @@ export function normalizeDate(dateStr: string): string {
 	// DD-MM-YYYY or DD/MM/YYYY
 	const dmyMatch = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
 	if (dmyMatch) {
-		const [, day, month, year] = dmyMatch;
+		const [, day = "", month = "", year = ""] = dmyMatch;
 		return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 	}
 
 	// YYYY/MM/DD (Japanese card statements)
 	const ymdSlashMatch = dateStr.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
 	if (ymdSlashMatch) {
-		const [, year, month, day] = ymdSlashMatch;
+		const [, year = "", month = "", day = ""] = ymdSlashMatch;
 		return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 	}
 
@@ -143,7 +143,7 @@ export function normalizeDate(dateStr: string): string {
 
 	// ISO format: 2025-01-15T10:30:00Z
 	const isoMatch = dateStr.match(/^(\d{4}-\d{2}-\d{2})T/);
-	if (isoMatch) {
+	if (isoMatch?.[1]) {
 		return isoMatch[1];
 	}
 
@@ -185,7 +185,7 @@ function splitCsvLine(line: string): string[] {
 	let inQuotes = false;
 
 	for (let i = 0; i < line.length; i++) {
-		const char = line[i];
+		const char = line[i] ?? "";
 		if (char === '"') {
 			if (inQuotes && line[i + 1] === '"') {
 				current += '"';
@@ -211,14 +211,20 @@ export function parseRakutenCsv(csvText: string): ParsedTransaction[] {
 	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
-	const headers = splitCsvLine(lines[0]);
+	const headerLine = lines[0];
+	if (!headerLine) return [];
+	const headers = splitCsvLine(headerLine);
 	const transactions: ParsedTransaction[] = [];
 
 	for (let i = 1; i < lines.length; i++) {
-		const columns = splitCsvLine(lines[i]);
+		const line = lines[i];
+		if (!line) continue;
+		const columns = splitCsvLine(line);
 		const row: Record<string, string> = {};
 		for (let j = 0; j < headers.length; j++) {
-			row[headers[j]] = columns[j] ?? "";
+			const key = headers[j];
+			if (key === undefined) continue;
+			row[key] = columns[j] ?? "";
 		}
 
 		const parsed = rakutenRowSchema.safeParse(row);
@@ -242,15 +248,18 @@ export function parseRakutenCsv(csvText: string): ParsedTransaction[] {
  * - 2行目: カラム数 6以上、1列目が YYYY/MM/DD パターン
  */
 export function detectSmbcFromContent(lines: string[]): boolean {
-	if (lines.length < 2) return false;
+	const firstLine = lines[0];
+	const secondLine = lines[1];
+	if (!firstLine || !secondLine) return false;
 
-	const firstLineColumns = lines[0].split(",").length;
+	const firstLineColumns = firstLine.split(",").length;
 	if (firstLineColumns >= 5) return false;
 
-	const secondLineColumns = lines[1].split(",");
+	const secondLineColumns = secondLine.split(",");
 	if (secondLineColumns.length < 6) return false;
 
-	return /^\d{4}\/\d{1,2}\/\d{1,2}$/.test(secondLineColumns[0]);
+	const firstColumn = secondLineColumns[0];
+	return firstColumn !== undefined && /^\d{4}\/\d{1,2}\/\d{1,2}$/.test(firstColumn);
 }
 
 /**
@@ -275,14 +284,17 @@ export function parseSmbcCsv(csvText: string): ParsedTransaction[] {
 
 	// 1行目は契約者情報なのでスキップ（i=1 から開始）
 	for (let i = 1; i < lines.length; i++) {
-		const columns = lines[i].split(",");
+		const line = lines[i];
+		if (!line) continue;
+		const columns = line.split(",");
 		if (columns.length < 3) continue;
 
-		const row = {
-			date: columns[0],
-			description: columns[1],
-			amount: columns[2],
-		};
+		const date = columns[0];
+		const description = columns[1];
+		const amount = columns[2];
+		if (!date || !description || !amount) continue;
+
+		const row = { date, description, amount };
 
 		const parsed = smbcRowSchema.safeParse(row);
 		if (!parsed.success) continue;
@@ -308,14 +320,20 @@ export function parseWiseCsv(csvText: string): ParsedTransaction[] {
 	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
-	const headers = splitCsvLine(lines[0]);
+	const headerLine = lines[0];
+	if (!headerLine) return [];
+	const headers = splitCsvLine(headerLine);
 	const transactions: ParsedTransaction[] = [];
 
 	for (let i = 1; i < lines.length; i++) {
-		const columns = splitCsvLine(lines[i]);
+		const line = lines[i];
+		if (!line) continue;
+		const columns = splitCsvLine(line);
 		const row: Record<string, string> = {};
 		for (let j = 0; j < headers.length; j++) {
-			row[headers[j]] = columns[j] ?? "";
+			const key = headers[j];
+			if (key === undefined) continue;
+			row[key] = columns[j] ?? "";
 		}
 
 		const parsed = wiseRowSchema.safeParse(row);
@@ -349,15 +367,21 @@ export function parseRevolutCsv(csvText: string): ParsedTransaction[] {
 	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
-	const headers = splitCsvLine(lines[0]);
+	const headerLine = lines[0];
+	if (!headerLine) return [];
+	const headers = splitCsvLine(headerLine);
 	const isJapanese = headers.some((h) => h.trim() === "お取引");
 	const transactions: ParsedTransaction[] = [];
 
 	for (let i = 1; i < lines.length; i++) {
-		const columns = splitCsvLine(lines[i]);
+		const line = lines[i];
+		if (!line) continue;
+		const columns = splitCsvLine(line);
 		const row: Record<string, string> = {};
 		for (let j = 0; j < headers.length; j++) {
-			row[headers[j]] = columns[j] ?? "";
+			const key = headers[j];
+			if (key === undefined) continue;
+			row[key] = columns[j] ?? "";
 		}
 
 		if (isJapanese) {
@@ -408,14 +432,20 @@ export function parseGenericCsv(csvText: string): ParsedTransaction[] {
 	const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== "");
 	if (lines.length < 2) return [];
 
-	const headers = splitCsvLine(lines[0]);
+	const headerLine = lines[0];
+	if (!headerLine) return [];
+	const headers = splitCsvLine(headerLine);
 	const transactions: ParsedTransaction[] = [];
 
 	for (let i = 1; i < lines.length; i++) {
-		const columns = splitCsvLine(lines[i]);
+		const line = lines[i];
+		if (!line) continue;
+		const columns = splitCsvLine(line);
 		const row: Record<string, string> = {};
 		for (let j = 0; j < headers.length; j++) {
-			row[headers[j]] = columns[j] ?? "";
+			const key = headers[j];
+			if (key === undefined) continue;
+			row[key] = columns[j] ?? "";
 		}
 
 		const parsed = genericRowSchema.safeParse(row);
@@ -450,7 +480,9 @@ export function parseCsv(csvText: string): {
 		return { format: "smbc", transactions: parseSmbcCsv(csvText) };
 	}
 
-	const headers = splitCsvLine(lines[0]);
+	const firstLine = lines[0];
+	if (!firstLine) return { format: "generic", transactions: [] };
+	const headers = splitCsvLine(firstLine);
 	const format = detectCsvFormat(headers);
 
 	switch (format) {
