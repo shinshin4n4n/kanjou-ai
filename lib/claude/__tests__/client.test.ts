@@ -64,10 +64,10 @@ describe("classifyTransactions", () => {
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data).toHaveLength(1);
-			expect(result.data[0].debitAccount).toBe("EXP001");
-			expect(result.data[0].creditAccount).toBe("AST002");
-			expect(result.data[0].confidence).toBe("HIGH");
-			expect(result.data[0].reason).toBeTruthy();
+			expect(result.data[0]!.debitAccount).toBe("EXP001");
+			expect(result.data[0]!.creditAccount).toBe("AST002");
+			expect(result.data[0]!.confidence).toBe("HIGH");
+			expect(result.data[0]!.reason).toBeTruthy();
 		}
 	});
 
@@ -108,8 +108,8 @@ describe("classifyTransactions", () => {
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data).toHaveLength(2);
-			expect(result.data[0].debitAccount).toBe("EXP001");
-			expect(result.data[1].debitAccount).toBe("EXP003");
+			expect(result.data[0]!.debitAccount).toBe("EXP001");
+			expect(result.data[1]!.debitAccount).toBe("EXP003");
 		}
 	});
 
@@ -210,7 +210,7 @@ describe("classifyTransactions", () => {
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data).toHaveLength(1);
-			expect(result.data[0].debitAccount).toBe("EXP001");
+			expect(result.data[0]!.debitAccount).toBe("EXP001");
 		}
 	});
 

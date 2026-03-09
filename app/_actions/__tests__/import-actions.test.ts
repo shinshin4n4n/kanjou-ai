@@ -213,7 +213,7 @@ describe("importTransactions", () => {
 
 		await importTransactions(validInput);
 
-		const insertedRows = txInsertChain.insert.mock.calls[0][0];
+		const insertedRows = txInsertChain.insert!.mock.calls[0]![0];
 		expect(insertedRows[0]).toEqual(
 			expect.objectContaining({
 				debit_account: "EXP010",
@@ -241,7 +241,7 @@ describe("importTransactions", () => {
 			],
 		});
 
-		const insertedRows = txInsertChain.insert.mock.calls[0][0];
+		const insertedRows = txInsertChain.insert!.mock.calls[0]![0];
 		expect(insertedRows[0].amount).toBe(1501);
 		expect(insertedRows[1].amount).toBe(2999);
 	});
@@ -264,7 +264,7 @@ describe("importTransactions", () => {
 			],
 		});
 
-		const insertedRows = txInsertChain.insert.mock.calls[0][0];
+		const insertedRows = txInsertChain.insert!.mock.calls[0]![0];
 		expect(insertedRows).toHaveLength(2);
 		expect(insertedRows.every((r: { amount: number }) => r.amount > 0)).toBe(true);
 		expect(logUpdateChain.update).toHaveBeenCalledWith(
