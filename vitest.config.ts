@@ -13,7 +13,7 @@ export default defineConfig({
 		environment: "jsdom",
 		globals: true,
 		setupFiles: ["./tests/setup.ts"],
-		// TubeReview方式: __tests__/ ディレクトリに配置
+		// テストファイルは対象モジュール直下の __tests__/ ディレクトリに配置
 		include: [
 			"lib/**/__tests__/**/*.test.ts",
 			"lib/**/__tests__/**/*.test.tsx",
@@ -40,7 +40,7 @@ export default defineConfig({
 			],
 			thresholds: {
 				statements: 80,
-				branches: 75,
+				branches: 80,
 				functions: 80,
 				lines: 80,
 			},

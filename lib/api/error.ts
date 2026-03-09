@@ -1,3 +1,4 @@
+import type { z } from "zod/v4";
 import type { ApiResponse } from "@/lib/types/api";
 
 /**
@@ -35,10 +36,10 @@ export class ApiError extends Error {
 /**
  * 集中エラーハンドリング
  *
- * TubeReview教訓:
- * - ZodErrorの詳細をクライアントに漏らさない
+ * セキュリティ設計方針:
+ * - ZodError の詳細をクライアントに漏らさない
  * - スタックトレースを露出しない
- * - ユーザーのメールアドレスをログに出力しない
+ * - ユーザーの個人情報をログに出力しない
  * - 全エラーをここで一元処理する
  */
 export function handleApiError(error: unknown): ApiResponse<never> {
@@ -98,7 +99,7 @@ export function handleApiError(error: unknown): ApiResponse<never> {
 /**
  * Zodエラー型ガード
  */
-function isZodError(error: unknown): boolean {
+function isZodError(error: unknown): error is z.ZodError {
 	return (
 		typeof error === "object" &&
 		error !== null &&

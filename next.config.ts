@@ -11,7 +11,7 @@ const securityHeaders = [
 	},
 	{
 		key: "X-Frame-Options",
-		value: "SAMEORIGIN",
+		value: "DENY",
 	},
 	{
 		key: "X-Content-Type-Options",
@@ -42,7 +42,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-	// TubeReview教訓: 本番で console.log を自動削除
+	// 本番環境では console.log を自動削除し、error/warn のみ残す
 	compiler: {
 		removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
 	},

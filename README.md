@@ -21,7 +21,7 @@
 | カテゴリ | 技術 |
 |---------|------|
 | Frontend | Next.js 16 (App Router) + React 19 |
-| Backend | Supabase (PostgreSQL + Auth) |
+| Backend | Supabase (PostgreSQL + Auth)（Google OAuth 対応予定） |
 | AI | Claude API (Anthropic) |
 | Validation | Zod 4 |
 | Styling | Tailwind CSS 4 + shadcn/ui |

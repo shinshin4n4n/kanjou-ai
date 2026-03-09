@@ -6,7 +6,7 @@
 
 - **Frontend**: Next.js 16 App Router + React 19
 - **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **Auth**: Email/Password + Google OAuth (Supabase Auth)
+- **Auth**: Email/Password（Google OAuth 対応予定）(Supabase Auth)
 - **Validation**: Zod 4
 - **AI**: Anthropic Claude API (仕訳推定)
 - **Styling**: Tailwind CSS 4 + lucide-react
@@ -201,6 +201,6 @@ Supabaseの最新の認証実装方法を教えて。use context7
 
 ---
 
-**Document Version:** 1.0.0
-**Last Updated:** 2026-02-28
+**Document Version:** 1.1.0
+**Last Updated:** 2026-03-10
 **Next Review:** 2026-05-28
