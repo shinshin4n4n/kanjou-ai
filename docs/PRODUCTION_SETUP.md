@@ -57,7 +57,25 @@ Vercel Dashboard > Settings > Environment Variables に以下を設定:
 2. Client ID と Client Secret を入力
 3. `app/login/page.tsx` の Google ログインボタンのコメントアウトを解除
 
-## 4. 動作確認チェックリスト
+## 4. E2E テスト用 Vercel Protection Bypass
+
+Vercel の Deployment Protection が有効な場合、CI の E2E テストが Preview デプロイにアクセスできるよう Bypass を設定する。
+
+### Vercel Dashboard
+
+1. Vercel Dashboard > Settings > Deployment Protection
+2. 「Protection Bypass for Automation」を有効化
+3. 生成された Secret をコピー
+
+### GitHub Secrets
+
+```bash
+echo "<コピーした Secret>" | gh secret set VERCEL_AUTOMATION_BYPASS_SECRET
+```
+
+Playwright が `x-vercel-protection-bypass` ヘッダーを自動付与し、Preview デプロイの認証をバイパスする。
+
+## 5. 動作確認チェックリスト
 
 - [ ] メール/パスワードでサインアップ・ログインができる
 - [ ] Google OAuth でログインができる
