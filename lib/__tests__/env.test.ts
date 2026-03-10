@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 describe("env", () => {
 	const VALID_ENV = {
 		NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-		NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-key",
+		NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key-dummy-value",
 	};
 
 	let originalEnv: NodeJS.ProcessEnv;
