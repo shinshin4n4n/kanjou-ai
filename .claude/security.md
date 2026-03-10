@@ -155,7 +155,7 @@ Supabase が返す PostgreSQL エラーコード `42501` を `handleApiError()` 
 - `NEXT_PUBLIC_` 付きの変数はブラウザに配信される
 - Anon Key は公開前提だが、RLS で保護されているため安全
 - Service Role Key はサーバー専用（Admin 操作用）。Client Component や公開コードに含めない
-- 環境変数の Non-null assertion には `biome-ignore` コメントを付与
+- 環境変数は `lib/env.ts` の Zod スキーマでバリデーション済み。`process.env!` (non-null assertion) は使わず `env.XXX` を参照する
 
 ## 脆弱性パターンと対策
 
