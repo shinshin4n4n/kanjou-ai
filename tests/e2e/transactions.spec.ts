@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Transactions", () => {
 	const testDescription = `E2Eテスト取引 ${Date.now()}`;
+	// Use today's date so the transaction appears on page 1 (default sort: transaction_date DESC)
+	const today = new Date().toISOString().split("T")[0];
 
 	test("should create a new transaction", async ({ page }) => {
 		await page.goto("/transactions/new");
@@ -13,7 +15,7 @@ test.describe("Transactions", () => {
 			setter?.call(input, val);
 			input.dispatchEvent(new Event("input", { bubbles: true }));
 			input.dispatchEvent(new Event("change", { bubbles: true }));
-		}, "2025-01-15");
+		}, today);
 
 		await page.locator("#description").fill(testDescription);
 		await page.locator("#amount").fill("1000");
