@@ -22,22 +22,46 @@ vi.mock("@/components/transaction-list-actions", () => ({
 import { redirect } from "next/navigation";
 import { getTransactions } from "@/app/_actions/transaction-actions";
 import { getUser } from "@/lib/auth";
+import type { Tables } from "@/lib/types/supabase";
 import TransactionsPage from "../page";
 
 const mockGetUser = vi.mocked(getUser);
 const mockGetTransactions = vi.mocked(getTransactions);
 const mockRedirect = vi.mocked(redirect);
 
-beforeEach(() => {
-	vi.clearAllMocks();
-	mockGetUser.mockResolvedValue({ id: "user-1", email: "test@example.com" } as ReturnType<
-		typeof getUser
-	> extends Promise<infer T>
-		? T
-		: never);
-});
+const transactionFixture: Tables<"transactions"> = {
+	id: "t-1",
+	user_id: "user-1",
+	transaction_date: "2026-01-01",
+	description: "テスト取引",
+	amount: 1000,
+	debit_account: "EXP001",
+	credit_account: "INC001",
+	tax_category: "tax_10",
+	memo: null,
+	is_confirmed: false,
+	source: "manual",
+	import_log_id: null,
+	ai_suggested: false,
+	ai_confidence: null,
+	original_currency: null,
+	original_amount: null,
+	exchange_rate: null,
+	fees: null,
+	deleted_at: null,
+	created_at: "2026-01-01T00:00:00Z",
+	updated_at: "2026-01-01T00:00:00Z",
+};
 
 describe("TransactionsPage", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockGetUser.mockResolvedValue({
+			id: "user-1",
+			email: "test@example.com",
+		} as Awaited<ReturnType<typeof getUser>>);
+	});
+
 	it("未認証の場合はログインにリダイレクトする", async () => {
 		mockGetUser.mockResolvedValue(null);
 		try {
@@ -85,7 +109,7 @@ describe("TransactionsPage", () => {
 		mockGetTransactions.mockResolvedValue({
 			success: true,
 			data: {
-				transactions: [{ id: "t-1" }] as never[],
+				transactions: [transactionFixture],
 				total: 40,
 				page: 1,
 				perPage: 20,

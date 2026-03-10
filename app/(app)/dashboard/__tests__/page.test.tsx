@@ -22,16 +22,15 @@ const mockGetUser = vi.mocked(getUser);
 const mockGetDashboardData = vi.mocked(getDashboardData);
 const mockRedirect = vi.mocked(redirect);
 
-beforeEach(() => {
-	vi.clearAllMocks();
-	mockGetUser.mockResolvedValue({ id: "user-1", email: "test@example.com" } as ReturnType<
-		typeof getUser
-	> extends Promise<infer T>
-		? T
-		: never);
-});
-
 describe("DashboardPage", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockGetUser.mockResolvedValue({
+			id: "user-1",
+			email: "test@example.com",
+		} as Awaited<ReturnType<typeof getUser>>);
+	});
+
 	it("未認証の場合はログインにリダイレクトする", async () => {
 		mockGetUser.mockResolvedValue(null);
 		try {
