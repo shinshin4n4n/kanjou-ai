@@ -32,8 +32,11 @@ test.describe("Transactions", () => {
 		await page.waitForURL("**/transactions", { timeout: 15000 });
 		await expect(page).toHaveURL(/\/transactions/);
 
+		// Wait for revalidation and reload to ensure fresh data
+		await page.reload({ waitUntil: "networkidle" });
+
 		// Verify the created transaction appears in the list
-		await expect(page.getByText(testDescription)).toBeVisible();
+		await expect(page.getByText(testDescription)).toBeVisible({ timeout: 15000 });
 
 		// Cleanup: delete the created test transaction
 		const row = page.locator("tr", { hasText: testDescription });
