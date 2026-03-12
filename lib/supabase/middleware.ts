@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/env";
+import { isPublicPath } from "./public-paths";
 
 export async function updateSession(request: NextRequest) {
 	let supabaseResponse = NextResponse.next({ request });
@@ -32,10 +33,7 @@ export async function updateSession(request: NextRequest) {
 
 	// 未認証ユーザーをログインページにリダイレクト
 	// 公開ページと認証コールバックはスキップ
-	const publicPaths = ["/", "/login", "/signup", "/auth/callback"];
-	const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname === path);
-
-	if (!user && !isPublicPath) {
+	if (!user && !isPublicPath(request.nextUrl.pathname)) {
 		const url = request.nextUrl.clone();
 		url.pathname = "/login";
 		return NextResponse.redirect(url);
