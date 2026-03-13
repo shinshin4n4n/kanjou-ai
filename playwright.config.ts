@@ -44,8 +44,43 @@ export default defineConfig({
 		},
 		{
 			name: "chromium",
+			testIgnore: /mobile-.*\.spec\.ts/,
 			use: {
 				...devices["Desktop Chrome"],
+				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
+			},
+			dependencies: ["setup"],
+		},
+		{
+			name: "firefox",
+			testIgnore: /mobile-.*\.spec\.ts/,
+			use: {
+				...devices["Desktop Firefox"],
+				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
+			},
+			dependencies: ["setup"],
+		},
+		{
+			name: "webkit",
+			testIgnore: /mobile-.*\.spec\.ts/,
+			use: {
+				...devices["Desktop Safari"],
+				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
+			},
+			dependencies: ["setup"],
+		},
+		{
+			name: "mobile-chrome",
+			use: {
+				...devices["Pixel 5"],
+				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
+			},
+			dependencies: ["setup"],
+		},
+		{
+			name: "mobile-safari",
+			use: {
+				...devices["iPhone 12"],
 				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
 			},
 			dependencies: ["setup"],
