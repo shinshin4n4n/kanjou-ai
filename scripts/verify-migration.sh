@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cleanup() {
+  echo "=== Stopping Supabase local instance ==="
+  supabase stop
+}
+trap cleanup EXIT
+
 echo "=== Starting Supabase local instance ==="
 supabase start -x realtime,storage,imgproxy,edge-runtime,logflare,vector,supavisor
 
@@ -17,6 +23,3 @@ if [ -n "$DIFF_OUTPUT" ]; then
 fi
 
 echo "=== All migrations applied successfully. No schema drift detected. ==="
-
-echo "=== Stopping Supabase local instance ==="
-supabase stop
