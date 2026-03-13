@@ -142,6 +142,85 @@ describe("transaction-queries", () => {
 			expect(mock.range).toHaveBeenCalledWith(0, 19);
 		});
 
+		it("取引が0件の場合に空配列を返す", async () => {
+			mockAuthSuccess();
+			createChainMock({ data: [], count: 0, error: null });
+
+			const result = await getTransactions({});
+
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.transactions).toHaveLength(0);
+				expect(result.data.total).toBe(0);
+			}
+		});
+
+		it("日付範囲でフィルタできる", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({
+				startDate: "2026-01-01",
+				endDate: "2026-03-31",
+			});
+
+			expect(mock.gte).toHaveBeenCalledWith("transaction_date", "2026-01-01");
+			expect(mock.lte).toHaveBeenCalledWith("transaction_date", "2026-03-31");
+		});
+
+		it("確認済みフィルタで絞り込める", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ isConfirmed: "true" });
+
+			expect(mock.eq).toHaveBeenCalledWith("is_confirmed", true);
+		});
+
+		it("未確認フィルタで絞り込める", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ isConfirmed: "false" });
+
+			expect(mock.eq).toHaveBeenCalledWith("is_confirmed", false);
+		});
+
+		it("勘定科目でフィルタできる", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ accountCategory: "EXP001" });
+
+			expect(mock.or).toHaveBeenCalledWith("debit_account.eq.EXP001,credit_account.eq.EXP001");
+		});
+
+		it("ページネーションが正しく動作する", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 50, error: null });
+
+			const result = await getTransactions({ page: "3", perPage: "10" });
+
+			expect(mock.range).toHaveBeenCalledWith(20, 29);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.page).toBe(3);
+				expect(result.data.perPage).toBe(10);
+				expect(result.data.total).toBe(50);
+			}
+		});
+
+		it("無効なページ番号でバリデーションエラーを返す", async () => {
+			mockAuthSuccess();
+
+			const result = await getTransactions({ page: "0" });
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("VALIDATION_ERROR");
+			}
+		});
+
 		it("DBエラー時にエラー詳細を漏洩しない", async () => {
 			mockAuthSuccess();
 			createChainMock({

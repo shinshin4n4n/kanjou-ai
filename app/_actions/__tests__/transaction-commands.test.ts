@@ -154,6 +154,52 @@ describe("transaction-commands", () => {
 			}
 		});
 
+		it("必須フィールド未入力でバリデーションエラーを返す", async () => {
+			mockAuthSuccess();
+
+			const result = await createTransaction({
+				transactionDate: "",
+				description: "",
+				amount: 0,
+				debitAccount: "",
+				creditAccount: "",
+			});
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("VALIDATION_ERROR");
+			}
+		});
+
+		it("金額に負の値でバリデーションエラーを返す", async () => {
+			mockAuthSuccess();
+
+			const result = await createTransaction({
+				...validCreateInput,
+				amount: -100,
+			});
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("VALIDATION_ERROR");
+			}
+		});
+
+		it("DBエラー時にエラー詳細を漏洩しない", async () => {
+			mockAuthSuccess();
+			createMutationMock({
+				data: null,
+				error: { code: "42501", message: "RLS violation" },
+			});
+
+			const result = await createTransaction(validCreateInput);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).not.toContain("RLS violation");
+			}
+		});
+
 		it("作成後にrevalidatePathが呼ばれる", async () => {
 			mockAuthSuccess();
 			createMutationMock({ data: sampleTransaction, error: null });
@@ -200,6 +246,41 @@ describe("transaction-commands", () => {
 				expect(result.code).toBe("VALIDATION_ERROR");
 			}
 		});
+
+		it("部分更新ができる", async () => {
+			mockAuthSuccess();
+			const updated = { ...sampleTransaction, amount: 5000 };
+			const { mock } = createMutationMock({ data: updated, error: null });
+
+			const result = await updateTransaction({
+				id: TEST_UUID,
+				amount: 5000,
+			});
+
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.amount).toBe(5000);
+			}
+			expect(mock.update).toHaveBeenCalledWith(expect.objectContaining({ amount: 5000 }));
+		});
+
+		it("DBエラー時にエラー詳細を漏洩しない", async () => {
+			mockAuthSuccess();
+			createMutationMock({
+				data: null,
+				error: { code: "42501", message: "RLS violation" },
+			});
+
+			const result = await updateTransaction({
+				id: TEST_UUID,
+				description: "テスト",
+			});
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).not.toContain("RLS violation");
+			}
+		});
 	});
 
 	describe("softDeleteTransaction", () => {
@@ -235,6 +316,33 @@ describe("transaction-commands", () => {
 			}
 		});
 
+		it("未認証でUNAUTHORIZEDエラーを返す", async () => {
+			mockRequireAuth.mockResolvedValue({
+				success: false,
+				error: "ログインが必要です。",
+				code: "UNAUTHORIZED",
+			});
+
+			const result = await softDeleteTransaction(TEST_UUID);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("UNAUTHORIZED");
+			}
+		});
+
+		it("存在しない取引でエラーを返す", async () => {
+			mockAuthSuccess();
+			createMutationMock({
+				data: null,
+				error: { code: "PGRST116", message: "not found" },
+			});
+
+			const result = await softDeleteTransaction(TEST_UUID);
+
+			expect(result.success).toBe(false);
+		});
+
 		it("削除後にrevalidatePathが呼ばれる", async () => {
 			mockAuthSuccess();
 			const deleted = { ...sampleTransaction, id: TEST_UUID, deleted_at: "2026-03-01T00:00:00Z" };
@@ -243,6 +351,21 @@ describe("transaction-commands", () => {
 			await softDeleteTransaction(TEST_UUID);
 
 			expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
+		});
+
+		it("DBエラー時にエラー詳細を漏洩しない", async () => {
+			mockAuthSuccess();
+			createMutationMock({
+				data: null,
+				error: { code: "42501", message: "RLS violation" },
+			});
+
+			const result = await softDeleteTransaction(TEST_UUID);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).not.toContain("RLS violation");
+			}
 		});
 	});
 
@@ -263,6 +386,44 @@ describe("transaction-commands", () => {
 				expect(result.data.is_confirmed).toBe(true);
 			}
 			expect(mock.update).toHaveBeenCalledWith(expect.objectContaining({ is_confirmed: true }));
+		});
+
+		it("未認証でUNAUTHORIZEDエラーを返す", async () => {
+			mockRequireAuth.mockResolvedValue({
+				success: false,
+				error: "ログインが必要です。",
+				code: "UNAUTHORIZED",
+			});
+
+			const result = await confirmTransaction(TEST_UUID);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("UNAUTHORIZED");
+			}
+		});
+
+		it("無効なIDでバリデーションエラーを返す", async () => {
+			mockAuthSuccess();
+
+			const result = await confirmTransaction("invalid-uuid");
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("VALIDATION_ERROR");
+			}
+		});
+
+		it("存在しない取引でエラーを返す", async () => {
+			mockAuthSuccess();
+			createMutationMock({
+				data: null,
+				error: { code: "PGRST116", message: "not found" },
+			});
+
+			const result = await confirmTransaction(TEST_UUID);
+
+			expect(result.success).toBe(false);
 		});
 
 		it("確認後にrevalidatePathが呼ばれる", async () => {
@@ -308,6 +469,32 @@ describe("transaction-commands", () => {
 			}
 		});
 
+		it("未認証でUNAUTHORIZEDエラーを返す", async () => {
+			mockRequireAuth.mockResolvedValue({
+				success: false,
+				error: "ログインが必要です。",
+				code: "UNAUTHORIZED",
+			});
+
+			const result = await bulkConfirmTransactions([TEST_UUID]);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("UNAUTHORIZED");
+			}
+		});
+
+		it("無効なIDを含む場合にバリデーションエラーを返す", async () => {
+			mockAuthSuccess();
+
+			const result = await bulkConfirmTransactions(["invalid-uuid"]);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe("VALIDATION_ERROR");
+			}
+		});
+
 		it("一括確認後にrevalidatePathが呼ばれる", async () => {
 			mockAuthSuccess();
 			const confirmed = [{ ...sampleTransaction, id: TEST_UUID, is_confirmed: true }];
@@ -316,6 +503,21 @@ describe("transaction-commands", () => {
 			await bulkConfirmTransactions([TEST_UUID]);
 
 			expect(mockRevalidatePath).toHaveBeenCalledWith("/transactions");
+		});
+
+		it("DBエラー時にエラー詳細を漏洩しない", async () => {
+			mockAuthSuccess();
+			createBulkMutationMock({
+				data: null,
+				error: { code: "42501", message: "RLS violation" },
+			});
+
+			const result = await bulkConfirmTransactions([TEST_UUID]);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).not.toContain("RLS violation");
+			}
 		});
 	});
 });
