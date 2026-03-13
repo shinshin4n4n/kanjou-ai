@@ -44,6 +44,7 @@ export default defineConfig({
 		},
 		{
 			name: "chromium",
+			testIgnore: /mobile-.*\.spec\.ts/,
 			use: {
 				...devices["Desktop Chrome"],
 				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
@@ -52,6 +53,7 @@ export default defineConfig({
 		},
 		{
 			name: "firefox",
+			testIgnore: /mobile-.*\.spec\.ts/,
 			use: {
 				...devices["Desktop Firefox"],
 				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
@@ -60,6 +62,7 @@ export default defineConfig({
 		},
 		{
 			name: "webkit",
+			testIgnore: /mobile-.*\.spec\.ts/,
 			use: {
 				...devices["Desktop Safari"],
 				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
