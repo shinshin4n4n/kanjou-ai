@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { handleApiError } from "@/lib/api/error";
 import { requireAuth } from "@/lib/auth";
 import { classifyTransactions } from "@/lib/claude/client";
-import type { ClassifiedTransaction } from "@/lib/claude/types";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/lib/types/api";
 import { applyClassificationsSchema, bulkConfirmSchema } from "@/lib/validators/transaction";
@@ -74,20 +73,18 @@ export async function runAiClassification(
 			};
 		}
 
-		const rows: AiClassificationRow[] = classifyResult.data
-			.filter((c): c is ClassifiedTransaction & { id: string } => !!c.id)
-			.map((c) => {
-				const tx = transactions.find((t) => t.id === c.id);
-				return {
-					id: c.id,
-					description: tx?.description ?? "",
-					amount: tx?.amount ?? 0,
-					debitAccount: c.debitAccount,
-					creditAccount: c.creditAccount,
-					confidence: c.confidence,
-					reason: c.reason,
-				};
-			});
+		const rows: AiClassificationRow[] = classifyResult.data.map((c) => {
+			const tx = transactions.find((t) => t.id === c.id);
+			return {
+				id: c.id,
+				description: tx?.description ?? "",
+				amount: tx?.amount ?? 0,
+				debitAccount: c.debitAccount,
+				creditAccount: c.creditAccount,
+				confidence: c.confidence,
+				reason: c.reason,
+			};
+		});
 
 		return { success: true, data: rows };
 	} catch (error) {

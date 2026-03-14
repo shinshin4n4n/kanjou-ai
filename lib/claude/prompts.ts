@@ -45,7 +45,7 @@ export const CLASSIFY_TOOL: Anthropic.Tool = {
 						confidence: { type: "string", enum: ["HIGH", "MEDIUM", "LOW"], description: "確信度" },
 						reason: { type: "string", description: "推定理由" },
 					},
-					required: ["debitAccount", "creditAccount", "confidence", "reason"],
+					required: ["id", "debitAccount", "creditAccount", "confidence", "reason"],
 				},
 			},
 		},
