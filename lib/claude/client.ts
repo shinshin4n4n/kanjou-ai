@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ApiError, handleApiError } from "@/lib/api/error";
 import type { ApiResponse } from "@/lib/types/api";
 import { aiClassifyRequestSchema } from "@/lib/validators/transaction";
-import { buildUserPrompt, SYSTEM_PROMPT } from "./prompts";
+import { buildUserPrompt, CLASSIFY_TOOL, SYSTEM_PROMPT } from "./prompts";
 import {
 	type ClassifiedTransaction,
 	classificationResultSchema,
@@ -24,28 +24,21 @@ export async function classifyTransactions(
 			model: "claude-sonnet-4-5-20250929",
 			max_tokens: 4096,
 			system: SYSTEM_PROMPT,
+			tools: [CLASSIFY_TOOL],
+			tool_choice: { type: "tool", name: "classify_transactions" },
 			messages: [
 				{ role: "user", content: buildUserPrompt(parsed.data.transactions, userInstruction) },
-				{ role: "assistant", content: "{" },
 			],
 		});
 
-		const textBlock = response.content.find(
-			(block): block is Anthropic.TextBlock => block.type === "text",
+		const toolUseBlock = response.content.find(
+			(block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
 		);
-		if (!textBlock) {
+		if (!toolUseBlock) {
 			throw new ApiError("AI_ERROR", "AIからの応答を取得できませんでした。");
 		}
 
-		const stripped = textBlock.text.replace(/^```(?:json)?\s*\n?|\n?```\s*$/g, "").trim();
-		const rawText = `{${stripped}`;
-		let json: unknown;
-		try {
-			json = JSON.parse(rawText);
-		} catch {
-			throw new ApiError("AI_ERROR", "AIの応答形式が不正です。");
-		}
-		const result = classificationResultSchema.safeParse(json);
+		const result = classificationResultSchema.safeParse(toolUseBlock.input);
 		if (!result.success) {
 			throw new ApiError("AI_ERROR", "AIの応答形式が不正です。");
 		}

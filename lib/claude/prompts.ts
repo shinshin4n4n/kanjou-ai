@@ -1,9 +1,12 @@
+import type Anthropic from "@anthropic-ai/sdk";
 import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
 import type { TransactionInput } from "./types";
 
 const accountList = Object.entries(ACCOUNT_CATEGORIES)
 	.map(([code, info]) => `${code}: ${info.name}（${info.type}）`)
 	.join("\n");
+
+const accountCodes = Object.keys(ACCOUNT_CATEGORIES);
 
 export const SYSTEM_PROMPT = `あなたは日本のフリーランスIT技術者向けの確定申告アシスタントです。
 取引の摘要から適切な勘定科目を推定してください。
@@ -19,9 +22,36 @@ ${accountList}
 - 費用の支払いは通常: 借方=費用科目、貸方=資産科目（普通預金など）
 - 収入の受取は通常: 借方=資産科目、貸方=収入科目
 
-## 出力形式
-以下のJSON形式のみを返してください。説明文やマークダウンは不要です。
-{"classifications":[{"id":"取引ID","debitAccount":"借方コード","creditAccount":"貸方コード","confidence":"HIGH","reason":"理由"}]}`;
+classify_transactions ツールを使って結果を返してください。`;
+
+export const CLASSIFY_TOOL: Anthropic.Tool = {
+	name: "classify_transactions",
+	description: "取引の仕訳分類結果を返す",
+	input_schema: {
+		type: "object",
+		properties: {
+			classifications: {
+				type: "array",
+				items: {
+					type: "object",
+					properties: {
+						id: { type: "string", description: "取引ID" },
+						debitAccount: { type: "string", enum: accountCodes, description: "借方勘定科目コード" },
+						creditAccount: {
+							type: "string",
+							enum: accountCodes,
+							description: "貸方勘定科目コード",
+						},
+						confidence: { type: "string", enum: ["HIGH", "MEDIUM", "LOW"], description: "確信度" },
+						reason: { type: "string", description: "推定理由" },
+					},
+					required: ["debitAccount", "creditAccount", "confidence", "reason"],
+				},
+			},
+		},
+		required: ["classifications"],
+	},
+};
 
 export function buildUserPrompt(
 	transactions: TransactionInput[],
