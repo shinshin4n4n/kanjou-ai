@@ -5,7 +5,7 @@ import { handleApiError } from "@/lib/api/error";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/lib/types/api";
-import type { Tables } from "@/lib/types/supabase";
+import type { Tables, TablesUpdate } from "@/lib/types/supabase";
 import type { CreateTransactionInput, UpdateTransactionInput } from "@/lib/validators/transaction";
 import {
 	bulkConfirmSchema,
@@ -68,15 +68,17 @@ export async function updateTransaction(
 		}
 
 		const { id, isConfirmed, ...fields } = parsed.data;
-		const updateData: Record<string, unknown> = {};
-		if (fields.transactionDate !== undefined) updateData.transaction_date = fields.transactionDate;
-		if (fields.description !== undefined) updateData.description = fields.description;
-		if (fields.amount !== undefined) updateData.amount = fields.amount;
-		if (fields.debitAccount !== undefined) updateData.debit_account = fields.debitAccount;
-		if (fields.creditAccount !== undefined) updateData.credit_account = fields.creditAccount;
-		if (fields.taxCategory !== undefined) updateData.tax_category = fields.taxCategory;
-		if (fields.memo !== undefined) updateData.memo = fields.memo;
-		if (isConfirmed !== undefined) updateData.is_confirmed = isConfirmed;
+
+		const updateData: TablesUpdate<"transactions"> = {
+			...(fields.transactionDate !== undefined && { transaction_date: fields.transactionDate }),
+			...(fields.description !== undefined && { description: fields.description }),
+			...(fields.amount !== undefined && { amount: fields.amount }),
+			...(fields.debitAccount !== undefined && { debit_account: fields.debitAccount }),
+			...(fields.creditAccount !== undefined && { credit_account: fields.creditAccount }),
+			...(fields.taxCategory !== undefined && { tax_category: fields.taxCategory }),
+			...(fields.memo !== undefined && { memo: fields.memo }),
+			...(isConfirmed !== undefined && { is_confirmed: isConfirmed }),
+		};
 
 		const supabase = await createClient();
 		const { data, error } = await supabase
