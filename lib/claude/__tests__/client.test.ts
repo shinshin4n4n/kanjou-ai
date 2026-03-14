@@ -198,6 +198,28 @@ describe("classifyTransactions", () => {
 		}
 	});
 
+	it("idが欠落したclassificationsでエラーを返す", async () => {
+		mockCreate.mockResolvedValue(
+			toolUseResponse({
+				classifications: [
+					{
+						debitAccount: "EXP001",
+						creditAccount: "AST002",
+						confidence: "HIGH",
+						reason: "通信費",
+					},
+				],
+			}),
+		);
+
+		const result = await classifyTransactions(sampleInput);
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.code).toBe("AI_ERROR");
+		}
+	});
+
 	it("空の取引配列でバリデーションエラーを返す", async () => {
 		const result = await classifyTransactions([]);
 

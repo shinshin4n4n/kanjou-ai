@@ -6,7 +6,7 @@ const accountCodes = Object.keys(ACCOUNT_CATEGORIES) as [string, ...string[]];
 export const classificationResultSchema = z.object({
 	classifications: z.array(
 		z.object({
-			id: z.string().optional(),
+			id: z.string(),
 			debitAccount: z.enum(accountCodes),
 			creditAccount: z.enum(accountCodes),
 			confidence: z.enum(["HIGH", "MEDIUM", "LOW"]),
@@ -25,7 +25,7 @@ export interface TransactionInput {
 }
 
 export interface ClassifiedTransaction {
-	id?: string;
+	id: string;
 	debitAccount: string;
 	creditAccount: string;
 	confidence: "HIGH" | "MEDIUM" | "LOW";
