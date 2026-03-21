@@ -7,6 +7,9 @@ cat > /dev/null
 MAX_FILES=5
 MAX_LINES=50
 
+# Track untracked files so they appear in diff (Write creates new files)
+git add -N . 2>/dev/null || true
+
 STAT_OUTPUT=$(git diff HEAD --stat 2>/dev/null) || exit 0
 
 if [ -z "$STAT_OUTPUT" ]; then

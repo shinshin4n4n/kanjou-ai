@@ -17,8 +17,8 @@ trap cleanup EXIT
 
 TMPDIR_BASE=$(mktemp -d)
 
-# Helper: create a temp git repo with N files, each with M lines of content
-# then stage changes so git diff --stat shows them
+# Helper: create a temp git repo with N untracked files, each with M lines
+# Files are NOT staged, simulating real Hook scenario (Write creates new files)
 setup_repo() {
   local dir="$1"
   local num_files="$2"
@@ -33,7 +33,6 @@ setup_repo() {
     for j in $(seq 1 "$lines_per_file"); do
       echo "line-$j" >> "file-$i.txt"
     done
-    git add "file-$i.txt"
   done
 }
 
