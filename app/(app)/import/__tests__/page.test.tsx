@@ -46,35 +46,35 @@ describe("ImportPage", () => {
 
 		it("5MB超のファイルでエラーを表示する", () => {
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
 			const file = createFile("large.csv", 6 * 1024 * 1024);
-			fireEvent.change(input!, { target: { files: [file] } });
+			fireEvent.change(input, { target: { files: [file] } });
 			expect(screen.getByText("ファイルサイズが5MBを超えています。")).toBeInTheDocument();
 		});
 
 		it("CSV以外のMIMEタイプかつ拡張子が.csvでないファイルでエラーを表示する", () => {
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
 			const file = createFile("data.json", 100, "application/json");
-			fireEvent.change(input!, { target: { files: [file] } });
+			fireEvent.change(input, { target: { files: [file] } });
 			expect(screen.getByText("CSVファイルのみアップロードできます。")).toBeInTheDocument();
 		});
 
 		it(".csv拡張子のファイルはMIMEタイプに関係なく受け付ける", () => {
 			mockParseCsvResult([{ date: "2026-01-15", description: "テスト", amount: 1000 }]);
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
 			const file = createFile("data.csv", 100, "");
-			fireEvent.change(input!, { target: { files: [file] } });
+			fireEvent.change(input, { target: { files: [file] } });
 			expect(screen.queryByText("CSVファイルのみアップロードできます。")).not.toBeInTheDocument();
 		});
 
 		it("パース結果が0件の場合エラーを表示する", async () => {
 			mockParseCsv.mockReturnValue({ format: "generic", transactions: [] });
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
 			const file = createFile("empty.csv", 10);
-			fireEvent.change(input!, { target: { files: [file] } });
+			fireEvent.change(input, { target: { files: [file] } });
 			await waitFor(() => {
 				expect(
 					screen.getByText("CSVファイルから取引データを読み取れませんでした。"),
@@ -92,8 +92,8 @@ describe("ImportPage", () => {
 			}));
 			mockParseCsvResult(txs);
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
-			fireEvent.change(input!, { target: { files: [createFile("test.csv", 100)] } });
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
+			fireEvent.change(input, { target: { files: [createFile("test.csv", 100)] } });
 			return txs;
 		}
 
@@ -121,8 +121,8 @@ describe("ImportPage", () => {
 				{ date: "2026-01-02", description: "収入", amount: 5000 },
 			]);
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
-			fireEvent.change(input!, { target: { files: [createFile("test.csv", 100)] } });
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
+			fireEvent.change(input, { target: { files: [createFile("test.csv", 100)] } });
 			await waitFor(() => {
 				expect(screen.getByText("プレビュー")).toBeInTheDocument();
 			});
@@ -148,8 +148,8 @@ describe("ImportPage", () => {
 		function setupPreviewAndClickImport() {
 			mockParseCsvResult([{ date: "2026-01-15", description: "テスト取引", amount: 1000 }]);
 			render(<ImportPage />);
-			const input = document.querySelector("input[type='file']");
-			fireEvent.change(input!, { target: { files: [createFile("test.csv", 100)] } });
+			const input = document.querySelector("input[type='file']") as HTMLInputElement;
+			fireEvent.change(input, { target: { files: [createFile("test.csv", 100)] } });
 		}
 
 		it("成功時に結果フェーズが表示される", async () => {

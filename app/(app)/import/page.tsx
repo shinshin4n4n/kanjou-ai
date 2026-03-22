@@ -194,8 +194,8 @@ export default function ImportPage() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{previewed.map((tx, i) => (
-							<TableRow key={`${tx.date}-${tx.description}-${i}`}>
+						{previewed.map((tx) => (
+							<TableRow key={`${tx.date}-${tx.description}-${tx.amount}`}>
 								<TableCell>{tx.date}</TableCell>
 								<TableCell>{tx.description}</TableCell>
 								<TableCell className={`text-right ${tx.amount < 0 ? "text-destructive" : ""}`}>
