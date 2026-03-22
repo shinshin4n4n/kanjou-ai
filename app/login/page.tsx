@@ -29,7 +29,7 @@ export default function LoginPage() {
 		setLoading(false);
 	}
 
-	async function handleGoogleSignIn() {
+	async function _handleGoogleSignIn() {
 		setError("");
 		const result = await signInWithGoogle();
 		if (result.success) {
