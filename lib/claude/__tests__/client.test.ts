@@ -141,7 +141,9 @@ describe("classifyTransactions", () => {
 
 		await classifyTransactions(sampleInput);
 
-		const callArgs = mockCreate.mock.calls[0]?.[0];
+		const callArgs = mockCreate.mock.calls[0]?.[0] as {
+			messages: { role: string; content: string }[];
+		};
 		const assistantMessage = callArgs.messages.find(
 			(m: { role: string }) => m.role === "assistant",
 		);

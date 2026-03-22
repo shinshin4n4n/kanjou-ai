@@ -194,8 +194,9 @@ export default function ImportPage() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{previewed.map((tx) => (
-							<TableRow key={`${tx.date}-${tx.description}-${tx.amount}`}>
+						{previewed.map((tx, i) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: プレビュー表示用の一時データで一意IDなし
+							<TableRow key={`${tx.date}-${tx.description}-${i}`}>
 								<TableCell>{tx.date}</TableCell>
 								<TableCell>{tx.description}</TableCell>
 								<TableCell className={`text-right ${tx.amount < 0 ? "text-destructive" : ""}`}>
