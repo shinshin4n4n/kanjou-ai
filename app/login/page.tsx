@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signIn, signInWithGoogle, signUp } from "@/app/_actions/auth";
+import { signIn, signUp } from "@/app/_actions/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,16 +27,6 @@ export default function LoginPage() {
 			setError(result.error);
 		}
 		setLoading(false);
-	}
-
-	async function handleGoogleSignIn() {
-		setError("");
-		const result = await signInWithGoogle();
-		if (result.success) {
-			window.location.href = result.data.url;
-		} else {
-			setError(result.error);
-		}
 	}
 
 	return (
