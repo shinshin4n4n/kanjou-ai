@@ -19,6 +19,10 @@ vi.mock("@/components/transaction-list-actions", () => ({
 	),
 }));
 
+vi.mock("@/components/transaction-search-input", () => ({
+	TransactionSearchInput: () => <div data-testid="search-input" />,
+}));
+
 import { redirect } from "next/navigation";
 import { getTransactions } from "@/app/_actions/transaction-actions";
 import { getUser } from "@/lib/auth";
@@ -103,6 +107,16 @@ describe("TransactionsPage", () => {
 		render(jsx);
 		const link = screen.getByRole("link", { name: /新規作成/ });
 		expect(link).toHaveAttribute("href", "/transactions/new");
+	});
+
+	it("検索入力コンポーネントが表示される", async () => {
+		mockGetTransactions.mockResolvedValue({
+			success: true,
+			data: { transactions: [], total: 0, page: 1, perPage: 20 },
+		});
+		const jsx = await TransactionsPage({ searchParams: Promise.resolve({}) });
+		render(jsx);
+		expect(screen.getByTestId("search-input")).toBeInTheDocument();
 	});
 
 	it("複数ページ時にページネーションが表示される", async () => {
