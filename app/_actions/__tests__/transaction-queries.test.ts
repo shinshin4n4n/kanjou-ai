@@ -239,6 +239,15 @@ describe("transaction-queries", () => {
 			expect(mock.ilike).toHaveBeenCalledWith("description", "%100\\%\\_off%");
 		});
 
+		it("searchのバックスラッシュがエスケープされる", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ search: "foo\\bar" });
+
+			expect(mock.ilike).toHaveBeenCalledWith("description", "%foo\\\\bar%");
+		});
+
 		it("search未指定時はilike検索が実行されない", async () => {
 			mockAuthSuccess();
 			const { mock } = createChainMock({ data: [], count: 0, error: null });

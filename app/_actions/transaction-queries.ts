@@ -49,7 +49,7 @@ export async function getTransactions(
 		let query = supabase.from("transactions").select("*", { count: "exact" });
 
 		if (search) {
-			const escaped = search.replace(/%/g, "\\%").replace(/_/g, "\\_");
+			const escaped = search.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
 			query = query.ilike("description", `%${escaped}%`);
 		}
 		if (startDate) {
