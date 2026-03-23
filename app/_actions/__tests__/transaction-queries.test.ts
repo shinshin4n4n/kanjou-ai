@@ -36,7 +36,7 @@ interface MutationMockResult {
 
 function createChainMock(result: ChainMockResult) {
 	const mock: Record<string, ReturnType<typeof vi.fn>> = {};
-	for (const method of ["select", "gte", "lte", "eq", "or", "order"]) {
+	for (const method of ["select", "gte", "lte", "eq", "or", "ilike", "order"]) {
 		mock[method] = vi.fn().mockReturnValue(mock);
 	}
 	mock.range = vi.fn().mockResolvedValue(result);
@@ -219,6 +219,42 @@ describe("transaction-queries", () => {
 			if (!result.success) {
 				expect(result.code).toBe("VALIDATION_ERROR");
 			}
+		});
+
+		it("searchパラメータでilike検索が実行される", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ search: "AWS" });
+
+			expect(mock.ilike).toHaveBeenCalledWith("description", "%AWS%");
+		});
+
+		it("searchのワイルドカード文字がエスケープされる", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ search: "100%_off" });
+
+			expect(mock.ilike).toHaveBeenCalledWith("description", "%100\\%\\_off%");
+		});
+
+		it("searchのバックスラッシュがエスケープされる", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({ search: "foo\\bar" });
+
+			expect(mock.ilike).toHaveBeenCalledWith("description", "%foo\\\\bar%");
+		});
+
+		it("search未指定時はilike検索が実行されない", async () => {
+			mockAuthSuccess();
+			const { mock } = createChainMock({ data: [], count: 0, error: null });
+
+			await getTransactions({});
+
+			expect(mock.ilike).not.toHaveBeenCalled();
 		});
 
 		it("DBエラー時にエラー詳細を漏洩しない", async () => {

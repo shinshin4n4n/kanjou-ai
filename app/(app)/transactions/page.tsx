@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTransactions } from "@/app/_actions/transaction-actions";
 import { TransactionListActions } from "@/components/transaction-list-actions";
+import { TransactionSearchInput } from "@/components/transaction-search-input";
 import { Button } from "@/components/ui/button";
 import { getUser } from "@/lib/auth";
 
@@ -57,6 +58,8 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
 					</Link>
 				</Button>
 			</div>
+
+			<TransactionSearchInput />
 
 			{transactions.length === 0 ? (
 				<div className="rounded-lg border bg-card p-10 text-center text-card-foreground">
