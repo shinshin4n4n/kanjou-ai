@@ -32,13 +32,25 @@ export async function getTransactions(
 			};
 		}
 
-		const { page, perPage, startDate, endDate, isConfirmed, accountCategory, sortBy, sortOrder } =
-			parsed.data;
+		const {
+			page,
+			perPage,
+			search,
+			startDate,
+			endDate,
+			isConfirmed,
+			accountCategory,
+			sortBy,
+			sortOrder,
+		} = parsed.data;
 
 		const supabase = await createClient();
 
 		let query = supabase.from("transactions").select("*", { count: "exact" });
 
+		if (search) {
+			query = query.ilike("description", `%${search}%`);
+		}
 		if (startDate) {
 			query = query.gte("transaction_date", startDate);
 		}
