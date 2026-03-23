@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	aiClassifyRequestSchema,
 	createTransactionSchema,
+	getTransactionsSchema,
 	updateTransactionSchema,
 } from "@/lib/validators/transaction";
 
@@ -141,6 +142,29 @@ describe("aiClassifyRequestSchema", () => {
 		}));
 		const input = { transactions };
 		const result = aiClassifyRequestSchema.safeParse(input);
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("getTransactionsSchema - search", () => {
+	it("searchパラメータを受け入れる", () => {
+		const result = getTransactionsSchema.safeParse({ search: "AWS" });
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.search).toBe("AWS");
+		}
+	});
+
+	it("search未指定でもバリデーションが通る", () => {
+		const result = getTransactionsSchema.safeParse({});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.search).toBeUndefined();
+		}
+	});
+
+	it("200文字超のsearchを拒否する", () => {
+		const result = getTransactionsSchema.safeParse({ search: "a".repeat(201) });
 		expect(result.success).toBe(false);
 	});
 });
