@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
+import { ACCOUNT_CATEGORIES, type AccountCode } from "@/lib/utils/constants";
 
-// 動的アクセスで TDD RED フェーズでも tsc を通す
-const categories = ACCOUNT_CATEGORIES as Record<string, Record<string, unknown>>;
+type CategoryInfo = (typeof ACCOUNT_CATEGORIES)[AccountCode];
 
 describe("ACCOUNT_CATEGORIES", () => {
-	const entries = Object.entries(categories);
-	const codes = Object.keys(categories);
+	const entries = Object.entries(ACCOUNT_CATEGORIES) as [AccountCode, CategoryInfo][];
+	const codes = Object.keys(ACCOUNT_CATEGORIES) as AccountCode[];
 
 	it("31件のエントリを持つ（INC:7 + EXP:13 + CAP:5 + AST:4 + LIA:2）", () => {
 		expect(entries).toHaveLength(31);
@@ -18,7 +17,7 @@ describe("ACCOUNT_CATEGORIES", () => {
 			expect(info).toHaveProperty("type");
 			expect(info).toHaveProperty("taxDefault");
 			expect(typeof info.name).toBe("string");
-			expect((info.name as string).length).toBeGreaterThan(0);
+			expect(info.name.length).toBeGreaterThan(0);
 		}
 	});
 
@@ -50,25 +49,19 @@ describe("ACCOUNT_CATEGORIES", () => {
 		const capCodes = codes.filter((c) => c.startsWith("CAP"));
 		expect(capCodes).toHaveLength(5);
 		for (const code of capCodes) {
-			const info = categories[code] as Record<string, unknown> | undefined;
-			expect(info).toBeDefined();
+			const info = ACCOUNT_CATEGORIES[code];
 			expect(info).toHaveProperty("capitalAllowance");
-			const ca = info?.capitalAllowance as { ia: number; aa: number };
-			expect(typeof ca.ia).toBe("number");
-			expect(typeof ca.aa).toBe("number");
 		}
 	});
 
 	it("EXP008（Entertainment）に deductionLimit: 0.5 がある", () => {
-		expect(categories.EXP008).toHaveProperty("deductionLimit", 0.5);
+		expect(ACCOUNT_CATEGORIES.EXP008).toHaveProperty("deductionLimit", 0.5);
 	});
 
 	it("CAP001（ICT Equipment）の IA=0.4, AA=0.2", () => {
-		const ca = categories.CAP001?.capitalAllowance as {
-			ia: number;
-			aa: number;
-		};
-		expect(ca.ia).toBe(0.4);
-		expect(ca.aa).toBe(0.2);
+		expect(ACCOUNT_CATEGORIES.CAP001).toHaveProperty("capitalAllowance", {
+			ia: 0.4,
+			aa: 0.2,
+		});
 	});
 });
