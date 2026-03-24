@@ -1,6 +1,20 @@
--- Seed: Malaysia Form B 対応デフォルト勘定科目マスタ
--- user_id = NULL はシステムプリセット（全ユーザー共通）
+-- Migration: Malaysia Form B 対応の勘定科目マスタに置換
+-- Issue #148
+--
+-- NOTE: この移行により既存コード（EXP001-013等）のセマンティクスが変わります。
+-- 例: 旧 EXP003=旅費交通費 → 新 EXP003=Office Rent
+-- 本番データがある場合は、事前にトランザクションデータの移行計画を策定してください。
+-- 既存データのマイグレーションスクリプトは後続PRで対応予定。
 
+-- 1. CHECK制約に 'capital' を追加
+ALTER TABLE account_categories DROP CONSTRAINT IF EXISTS account_categories_category_type_check;
+ALTER TABLE account_categories ADD CONSTRAINT account_categories_category_type_check
+  CHECK (category_type IN ('expense', 'income', 'asset', 'liability', 'capital'));
+
+-- 2. 旧システムプリセットを削除
+DELETE FROM account_categories WHERE user_id IS NULL;
+
+-- 3. Malaysia Form B 対応カテゴリを挿入
 INSERT INTO account_categories (user_id, code, name, category_type, tax_default, sort_order) VALUES
   -- Income (Form B)
   (NULL, 'INC001', 'IT Services (Domestic)',      'income',    'not_applicable',  1),

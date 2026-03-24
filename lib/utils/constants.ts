@@ -1,34 +1,79 @@
 /**
  * 勘定科目・税区分の定数定義
- * フリーランスIT向けのプリセット
+ * Malaysia Form B（個人所得税申告書）対応
  */
 
 export const ACCOUNT_CATEGORIES = {
-	EXP001: { name: "通信費", type: "expense", taxDefault: "tax_10" },
-	EXP002: { name: "消耗品費", type: "expense", taxDefault: "tax_10" },
-	EXP003: { name: "旅費交通費", type: "expense", taxDefault: "tax_10" },
-	EXP004: { name: "地代家賃", type: "expense", taxDefault: "tax_10" },
-	EXP005: { name: "水道光熱費", type: "expense", taxDefault: "tax_10" },
-	EXP006: { name: "新聞図書費", type: "expense", taxDefault: "tax_10" },
-	EXP007: { name: "支払手数料", type: "expense", taxDefault: "tax_10" },
-	EXP008: { name: "外注費", type: "expense", taxDefault: "tax_10" },
-	EXP009: { name: "接待交際費", type: "expense", taxDefault: "tax_10" },
-	EXP010: { name: "雑費", type: "expense", taxDefault: "tax_10" },
-	EXP011: { name: "減価償却費", type: "expense", taxDefault: "not_applicable" },
-	EXP012: { name: "広告宣伝費", type: "expense", taxDefault: "tax_10" },
-	EXP013: { name: "租税公課", type: "expense", taxDefault: "not_applicable" },
-	INC001: { name: "売上高", type: "income", taxDefault: "tax_10" },
-	INC002: { name: "雑収入", type: "income", taxDefault: "tax_10" },
-	AST001: { name: "現金", type: "asset", taxDefault: "not_applicable" },
-	AST002: { name: "普通預金", type: "asset", taxDefault: "not_applicable" },
-	AST003: { name: "売掛金", type: "asset", taxDefault: "not_applicable" },
-	AST004: { name: "事業主貸", type: "asset", taxDefault: "not_applicable" },
-	LIA001: { name: "未払金", type: "liability", taxDefault: "not_applicable" },
-	LIA002: { name: "事業主借", type: "liability", taxDefault: "not_applicable" },
+	// Income (Form B)
+	INC001: { name: "IT Services (Domestic)", type: "income", taxDefault: "not_applicable" },
+	INC002: { name: "IT Services (Overseas)", type: "income", taxDefault: "not_applicable" },
+	INC003: { name: "Software Licenses/Royalties", type: "income", taxDefault: "not_applicable" },
+	INC004: { name: "Salary/Director Fee", type: "income", taxDefault: "not_applicable" },
+	INC005: { name: "Interest Income", type: "income", taxDefault: "not_applicable" },
+	INC006: { name: "Dividend Income", type: "income", taxDefault: "tax_exempt" },
+	INC007: { name: "Rental Income", type: "income", taxDefault: "not_applicable" },
+	// Expense (Section 33)
+	EXP001: { name: "Software/Cloud/SaaS", type: "expense", taxDefault: "not_applicable" },
+	EXP002: { name: "Telecommunication", type: "expense", taxDefault: "not_applicable" },
+	EXP003: { name: "Office Rent", type: "expense", taxDefault: "not_applicable" },
+	EXP004: { name: "Utilities", type: "expense", taxDefault: "not_applicable" },
+	EXP005: { name: "Travel (Business)", type: "expense", taxDefault: "not_applicable" },
+	EXP006: { name: "Professional Fees", type: "expense", taxDefault: "not_applicable" },
+	EXP007: { name: "Training/Upskilling", type: "expense", taxDefault: "not_applicable" },
+	EXP008: {
+		name: "Entertainment",
+		type: "expense",
+		taxDefault: "not_applicable",
+		deductionLimit: 0.5,
+	},
+	EXP009: { name: "Insurance (Business)", type: "expense", taxDefault: "not_applicable" },
+	EXP010: { name: "Office Supplies", type: "expense", taxDefault: "not_applicable" },
+	EXP011: { name: "Depreciation", type: "expense", taxDefault: "not_applicable" },
+	EXP012: { name: "Marketing/Advertising", type: "expense", taxDefault: "not_applicable" },
+	EXP013: { name: "Miscellaneous Expense", type: "expense", taxDefault: "not_applicable" },
+	// Capital Expenditure (Schedule 3)
+	CAP001: {
+		name: "ICT Equipment",
+		type: "capital",
+		taxDefault: "not_applicable",
+		capitalAllowance: { ia: 0.4, aa: 0.2 },
+	},
+	CAP002: {
+		name: "Small Assets (<RM2000)",
+		type: "capital",
+		taxDefault: "not_applicable",
+		capitalAllowance: { ia: 1.0, aa: 0 },
+	},
+	CAP003: {
+		name: "Furniture/Fittings",
+		type: "capital",
+		taxDefault: "not_applicable",
+		capitalAllowance: { ia: 0.1, aa: 0.1 },
+	},
+	CAP004: {
+		name: "Motor Vehicle",
+		type: "capital",
+		taxDefault: "not_applicable",
+		capitalAllowance: { ia: 0.2, aa: 0.2 },
+	},
+	CAP005: {
+		name: "Software License (Capital)",
+		type: "capital",
+		taxDefault: "not_applicable",
+		capitalAllowance: { ia: 0.2, aa: 0.1 },
+	},
+	// Asset
+	AST001: { name: "Cash", type: "asset", taxDefault: "not_applicable" },
+	AST002: { name: "Bank Account", type: "asset", taxDefault: "not_applicable" },
+	AST003: { name: "Accounts Receivable", type: "asset", taxDefault: "not_applicable" },
+	AST004: { name: "Owner's Drawings", type: "asset", taxDefault: "not_applicable" },
+	// Liability
+	LIA001: { name: "Accounts Payable", type: "liability", taxDefault: "not_applicable" },
+	LIA002: { name: "Owner's Capital Injection", type: "liability", taxDefault: "not_applicable" },
 } as const;
 
 export type AccountCode = keyof typeof ACCOUNT_CATEGORIES;
-export type AccountType = "expense" | "income" | "asset" | "liability";
+export type AccountType = "expense" | "income" | "asset" | "liability" | "capital";
 
 export const TAX_CATEGORIES = {
 	tax_10: { name: "課税仕入10%", rate: 0.1 },

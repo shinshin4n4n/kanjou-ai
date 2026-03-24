@@ -18,15 +18,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Tables } from "@/lib/types/supabase";
-import { ACCOUNT_CATEGORIES, TAX_CATEGORIES } from "@/lib/utils/constants";
+import { ACCOUNT_CATEGORIES, type AccountType, TAX_CATEGORIES } from "@/lib/utils/constants";
 
 type Transaction = Tables<"transactions">;
 
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-	expense: "経費",
-	income: "収益",
-	asset: "資産",
-	liability: "負債",
+const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
+	expense: "Expense",
+	income: "Income",
+	capital: "Capital Expenditure",
+	asset: "Asset",
+	liability: "Liability",
 };
 
 function AccountSelect({
@@ -52,7 +53,7 @@ function AccountSelect({
 				<SelectContent>
 					{Object.entries(grouped).map(([type, entries]) => (
 						<SelectGroup key={type}>
-							<SelectLabel>{ACCOUNT_TYPE_LABELS[type] ?? type}</SelectLabel>
+							<SelectLabel>{ACCOUNT_TYPE_LABELS[type as AccountType] ?? type}</SelectLabel>
 							{entries?.map(([code, { name }]) => (
 								<SelectItem key={code} value={code}>
 									{name}

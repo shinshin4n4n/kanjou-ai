@@ -168,3 +168,27 @@ describe("getTransactionsSchema - search", () => {
 		expect(result.success).toBe(false);
 	});
 });
+
+describe("createTransactionSchema - Malaysia Form B codes", () => {
+	it("新規 income コード INC003 を受け入れる", () => {
+		const input = {
+			transactionDate: "2026-03-01",
+			description: "Software royalty",
+			amount: 10000,
+			debitAccount: "AST002",
+			creditAccount: "INC003",
+		};
+		expect(createTransactionSchema.safeParse(input).success).toBe(true);
+	});
+
+	it("新規 capital コード CAP001 を受け入れる", () => {
+		const input = {
+			transactionDate: "2026-03-01",
+			description: "MacBook purchase",
+			amount: 8000,
+			debitAccount: "CAP001",
+			creditAccount: "AST002",
+		};
+		expect(createTransactionSchema.safeParse(input).success).toBe(true);
+	});
+});
