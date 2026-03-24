@@ -20,7 +20,7 @@ export const importTransactionsSchema = z.object({
 		.max(UPLOAD_LIMITS.MAX_ROWS_PER_IMPORT),
 	fileName: z.string().min(1),
 	fileSize: z.number().positive().max(UPLOAD_LIMITS.MAX_FILE_SIZE),
-	csvFormat: z.enum(["wise", "revolut", "smbc", "rakuten", "generic"]),
+	csvFormat: z.enum(["wise", "revolut", "smbc", "rakuten", "sony-bank", "generic"]),
 });
 
 export type ImportTransactionsInput = z.infer<typeof importTransactionsSchema>;

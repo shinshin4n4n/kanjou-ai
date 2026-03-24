@@ -1,7 +1,7 @@
 /**
  * CSV インポート対応フォーマット
  */
-export type CsvFormat = "wise" | "revolut" | "smbc" | "rakuten" | "generic";
+export type CsvFormat = "wise" | "revolut" | "smbc" | "rakuten" | "sony-bank" | "generic";
 
 /**
  * パース後の統一取引データ

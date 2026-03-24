@@ -9,6 +9,7 @@ import {
 	parseRakutenCsv,
 	parseRevolutCsv,
 	parseSmbcCsv,
+	parseSonyBankCsv,
 	parseWiseCsv,
 } from "@/lib/csv/parsers";
 
@@ -450,6 +451,128 @@ describe("CSV パーサー", () => {
 				"2025-01-20,交通費,1200",
 			].join("\n");
 			const result = parseGenericCsv(csvWithBadAmount);
+			expect(result).toHaveLength(1);
+		});
+	});
+
+	describe("detectCsvFormat - ソニー銀行", () => {
+		it("ソニー銀行形式を検出する", () => {
+			const headers = ["お取引日", "摘要", "お引出し金額", "お預入れ金額", "残高", "メモ"];
+			expect(detectCsvFormat(headers)).toBe("sony-bank");
+		});
+
+		it("お取引日だけでは検出しない", () => {
+			const headers = ["お取引日", "摘要", "金額"];
+			expect(detectCsvFormat(headers)).toBe("generic");
+		});
+	});
+
+	describe("parseSonyBankCsv", () => {
+		const sonyBankCsv = [
+			"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+			"2025/01/15,ATM引出し,10000,,990000,",
+			"2025/01/20,振込 カ）サンプル,,50000,1040000,給与",
+		].join("\n");
+
+		it("ソニー銀行CSVをパースして取引一覧を返す", () => {
+			const result = parseSonyBankCsv(sonyBankCsv);
+			expect(result).toHaveLength(2);
+		});
+
+		it("日付をYYYY-MM-DD形式に正規化する", () => {
+			const result = parseSonyBankCsv(sonyBankCsv);
+			expect(result[0]?.date).toBe("2025-01-15");
+			expect(result[1]?.date).toBe("2025-01-20");
+		});
+
+		it("摘要をdescriptionにマッピングする", () => {
+			const result = parseSonyBankCsv(sonyBankCsv);
+			expect(result[0]?.description).toBe("ATM引出し");
+			expect(result[1]?.description).toBe("振込 カ）サンプル");
+		});
+
+		it("お引出し金額を負の値としてパースする", () => {
+			const result = parseSonyBankCsv(sonyBankCsv);
+			expect(result[0]?.amount).toBe(-10000);
+		});
+
+		it("お預入れ金額を正の値としてパースする", () => {
+			const result = parseSonyBankCsv(sonyBankCsv);
+			expect(result[1]?.amount).toBe(50000);
+		});
+
+		it("千区切りカンマ付き金額を正しくパースする", () => {
+			const csv = [
+				"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+				'2025/01/15,ATM引出し,"10,000",,990000,',
+				'2025/01/20,振込,,"1,500,000",2490000,',
+			].join("\n");
+			const result = parseSonyBankCsv(csv);
+			expect(result[0]?.amount).toBe(-10000);
+			expect(result[1]?.amount).toBe(1500000);
+		});
+
+		it("データ行が無い場合は空配列を返す", () => {
+			const headerOnly = "お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ";
+			expect(parseSonyBankCsv(headerOnly)).toEqual([]);
+		});
+
+		it("空行を無視する", () => {
+			const csvWithEmpty = `${sonyBankCsv}\n\n`;
+			const result = parseSonyBankCsv(csvWithEmpty);
+			expect(result).toHaveLength(2);
+		});
+
+		it("入出金の両方が空の行をスキップする", () => {
+			const csvWithBadRow = [
+				"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+				"2025/01/15,ATM引出し,10000,,990000,",
+				"2025/01/20,残高照会,,,,",
+			].join("\n");
+			const result = parseSonyBankCsv(csvWithBadRow);
+			expect(result).toHaveLength(1);
+		});
+
+		it("不正な金額の行をスキップする", () => {
+			const csvWithBadAmount = [
+				"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+				"2025/01/15,ATM引出し,abc,,990000,",
+				"2025/01/20,振込,,50000,1040000,",
+			].join("\n");
+			const result = parseSonyBankCsv(csvWithBadAmount);
+			expect(result).toHaveLength(1);
+		});
+
+		it("Windows改行(CRLF)を処理する", () => {
+			const crlfCsv = [
+				"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+				"2025/01/15,ATM引出し,10000,,990000,",
+			].join("\r\n");
+			const result = parseSonyBankCsv(crlfCsv);
+			expect(result).toHaveLength(1);
+			expect(result[0]?.amount).toBe(-10000);
+		});
+
+		it("BOM付きUTF-8を処理する", () => {
+			const bomCsv =
+				"\uFEFF" +
+				[
+					"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+					"2025/01/15,ATM引出し,10000,,990000,",
+				].join("\n");
+			const result = parseSonyBankCsv(bomCsv);
+			expect(result).toHaveLength(1);
+			expect(result[0]?.date).toBe("2025-01-15");
+		});
+
+		it("必須カラム（日付・摘要）が欠けている行をスキップする", () => {
+			const csvWithMissing = [
+				"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+				",ATM引出し,10000,,990000,",
+				"2025/01/15,,10000,,990000,",
+				"2025/01/20,振込,,50000,1040000,",
+			].join("\n");
+			const result = parseSonyBankCsv(csvWithMissing);
 			expect(result).toHaveLength(1);
 		});
 	});
