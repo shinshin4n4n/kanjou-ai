@@ -20,13 +20,13 @@ test.describe("Transactions", () => {
 		await page.locator("#description").fill(testDescription);
 		await page.locator("#amount").fill("1000");
 
-		// Select debit account: 通信費
+		// Select debit account: Software/Cloud/SaaS (EXP001)
 		await page.locator("#debitAccount").click();
-		await page.getByRole("option", { name: "通信費" }).click();
+		await page.getByRole("option", { name: "Software/Cloud/SaaS" }).click();
 
-		// Select credit account: 普通預金
+		// Select credit account: Bank Account (AST002)
 		await page.locator("#creditAccount").click();
-		await page.getByRole("option", { name: "普通預金" }).click();
+		await page.getByRole("option", { name: "Bank Account" }).click();
 
 		await page.getByRole("button", { name: "保存" }).click();
 
