@@ -23,10 +23,11 @@ import { ACCOUNT_CATEGORIES, TAX_CATEGORIES } from "@/lib/utils/constants";
 type Transaction = Tables<"transactions">;
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-	expense: "経費",
-	income: "収益",
-	asset: "資産",
-	liability: "負債",
+	expense: "Expense",
+	income: "Income",
+	capital: "Capital Expenditure",
+	asset: "Asset",
+	liability: "Liability",
 };
 
 function AccountSelect({
