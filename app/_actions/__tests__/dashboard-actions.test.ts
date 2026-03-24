@@ -132,10 +132,10 @@ describe("getDashboardData", () => {
 		expect(result.data.expenseBreakdown).toHaveLength(2);
 
 		const commFee = result.data.expenseBreakdown.find((e) => e.code === "EXP001");
-		expect(commFee).toEqual({ code: "EXP001", name: "通信費", amount: 7000 });
+		expect(commFee).toEqual({ code: "EXP001", name: "Software/Cloud/SaaS", amount: 7000 });
 
 		const travelFee = result.data.expenseBreakdown.find((e) => e.code === "EXP003");
-		expect(travelFee).toEqual({ code: "EXP003", name: "旅費交通費", amount: 3000 });
+		expect(travelFee).toEqual({ code: "EXP003", name: "Office Rent", amount: 3000 });
 	});
 
 	it("未確認件数が正しくカウントされる", async () => {
