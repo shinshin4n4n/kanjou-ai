@@ -1,29 +1,40 @@
--- Seed: デフォルト勘定科目マスタ
+-- Seed: Malaysia Form B 対応デフォルト勘定科目マスタ
 -- user_id = NULL はシステムプリセット（全ユーザー共通）
 
 INSERT INTO account_categories (user_id, code, name, category_type, tax_default, sort_order) VALUES
-  -- 経費 (expense)
-  (NULL, 'EXP001', '通信費',       'expense', 'tax_10',         1),
-  (NULL, 'EXP002', '消耗品費',     'expense', 'tax_10',         2),
-  (NULL, 'EXP003', '旅費交通費',   'expense', 'tax_10',         3),
-  (NULL, 'EXP004', '地代家賃',     'expense', 'tax_10',         4),
-  (NULL, 'EXP005', '水道光熱費',   'expense', 'tax_10',         5),
-  (NULL, 'EXP006', '新聞図書費',   'expense', 'tax_10',         6),
-  (NULL, 'EXP007', '支払手数料',   'expense', 'tax_10',         7),
-  (NULL, 'EXP008', '外注費',       'expense', 'tax_10',         8),
-  (NULL, 'EXP009', '接待交際費',   'expense', 'tax_10',         9),
-  (NULL, 'EXP010', '雑費',         'expense', 'tax_10',        10),
-  (NULL, 'EXP011', '減価償却費',   'expense', 'not_applicable', 11),
-  (NULL, 'EXP012', '広告宣伝費',   'expense', 'tax_10',        12),
-  (NULL, 'EXP013', '租税公課',     'expense', 'not_applicable', 13),
-  -- 収入 (income)
-  (NULL, 'INC001', '売上高',       'income',  'tax_10',        14),
-  (NULL, 'INC002', '雑収入',       'income',  'tax_10',        15),
-  -- 資産 (asset)
-  (NULL, 'AST001', '現金',         'asset',   'not_applicable', 16),
-  (NULL, 'AST002', '普通預金',     'asset',   'not_applicable', 17),
-  (NULL, 'AST003', '売掛金',       'asset',   'not_applicable', 18),
-  (NULL, 'AST004', '事業主貸',     'asset',   'not_applicable', 19),
-  -- 負債 (liability)
-  (NULL, 'LIA001', '未払金',       'liability', 'not_applicable', 20),
-  (NULL, 'LIA002', '事業主借',     'liability', 'not_applicable', 21);
+  -- Income (Form B)
+  (NULL, 'INC001', 'IT Services (Domestic)',      'income',    'not_applicable',  1),
+  (NULL, 'INC002', 'IT Services (Overseas)',       'income',    'not_applicable',  2),
+  (NULL, 'INC003', 'Software Licenses/Royalties',  'income',    'not_applicable',  3),
+  (NULL, 'INC004', 'Salary/Director Fee',          'income',    'not_applicable',  4),
+  (NULL, 'INC005', 'Interest Income',              'income',    'not_applicable',  5),
+  (NULL, 'INC006', 'Dividend Income',              'income',    'tax_exempt',      6),
+  (NULL, 'INC007', 'Rental Income',                'income',    'not_applicable',  7),
+  -- Expense (Section 33)
+  (NULL, 'EXP001', 'Software/Cloud/SaaS',          'expense',   'not_applicable',  8),
+  (NULL, 'EXP002', 'Telecommunication',            'expense',   'not_applicable',  9),
+  (NULL, 'EXP003', 'Office Rent',                  'expense',   'not_applicable', 10),
+  (NULL, 'EXP004', 'Utilities',                    'expense',   'not_applicable', 11),
+  (NULL, 'EXP005', 'Travel (Business)',            'expense',   'not_applicable', 12),
+  (NULL, 'EXP006', 'Professional Fees',            'expense',   'not_applicable', 13),
+  (NULL, 'EXP007', 'Training/Upskilling',          'expense',   'not_applicable', 14),
+  (NULL, 'EXP008', 'Entertainment',                'expense',   'not_applicable', 15),
+  (NULL, 'EXP009', 'Insurance (Business)',          'expense',   'not_applicable', 16),
+  (NULL, 'EXP010', 'Office Supplies',              'expense',   'not_applicable', 17),
+  (NULL, 'EXP011', 'Depreciation',                 'expense',   'not_applicable', 18),
+  (NULL, 'EXP012', 'Marketing/Advertising',        'expense',   'not_applicable', 19),
+  (NULL, 'EXP013', 'Miscellaneous Expense',        'expense',   'not_applicable', 20),
+  -- Capital Expenditure (Schedule 3)
+  (NULL, 'CAP001', 'ICT Equipment',                'capital',   'not_applicable', 21),
+  (NULL, 'CAP002', 'Small Assets (<RM2000)',        'capital',   'not_applicable', 22),
+  (NULL, 'CAP003', 'Furniture/Fittings',            'capital',   'not_applicable', 23),
+  (NULL, 'CAP004', 'Motor Vehicle',                 'capital',   'not_applicable', 24),
+  (NULL, 'CAP005', 'Software License (Capital)',    'capital',   'not_applicable', 25),
+  -- Asset
+  (NULL, 'AST001', 'Cash',                         'asset',     'not_applicable', 26),
+  (NULL, 'AST002', 'Bank Account',                 'asset',     'not_applicable', 27),
+  (NULL, 'AST003', 'Accounts Receivable',           'asset',     'not_applicable', 28),
+  (NULL, 'AST004', 'Owner''s Drawings',             'asset',     'not_applicable', 29),
+  -- Liability
+  (NULL, 'LIA001', 'Accounts Payable',              'liability', 'not_applicable', 30),
+  (NULL, 'LIA002', 'Owner''s Capital Injection',    'liability', 'not_applicable', 31);
