@@ -618,6 +618,16 @@ describe("CSV パーサー", () => {
 			expect(result.transactions).toEqual([]);
 		});
 
+		it("ソニー銀行 CSVを自動判定してパースする", () => {
+			const sonyBankCsv = [
+				"お取引日,摘要,お引出し金額,お預入れ金額,残高,メモ",
+				"2025/01/15,ATM引出し,10000,,990000,",
+			].join("\n");
+			const result = parseCsv(sonyBankCsv);
+			expect(result.format).toBe("sony-bank");
+			expect(result.transactions).toHaveLength(1);
+		});
+
 		it("日本語版 Revolut CSVを自動判定してパースする", () => {
 			const revolutJaCsv = [
 				"種類,サービス,開始日,完了日,お取引,金額,手数料,通貨,状態,残高",
