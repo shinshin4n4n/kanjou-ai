@@ -45,7 +45,7 @@ describe("formatYayoi", () => {
 		const csv = formatYayoi([sampleTx]);
 		const lines = csv.split("\n");
 		expect(lines[0]).toBe("仕訳日付,借方勘定科目,借方金額,貸方勘定科目,貸方金額,摘要");
-		expect(lines[1]).toBe("2026-01-15,通信費,5000,普通預金,5000,AWS利用料");
+		expect(lines[1]).toBe("2026-01-15,Software/Cloud/SaaS,5000,Bank Account,5000,AWS利用料");
 	});
 
 	it("空配列ではヘッダーのみ返す", () => {
@@ -66,13 +66,15 @@ describe("formatFreee", () => {
 		const csv = formatFreee([sampleTx]);
 		const lines = csv.split("\n");
 		expect(lines[0]).toBe("日付,借方勘定科目,借方金額,貸方勘定科目,貸方金額,摘要,税区分");
-		expect(lines[1]).toBe("2026-01-15,通信費,5000,普通預金,5000,AWS利用料,課税仕入10%");
+		expect(lines[1]).toBe(
+			"2026-01-15,Software/Cloud/SaaS,5000,Bank Account,5000,AWS利用料,課税仕入10%",
+		);
 	});
 
 	it("tax_categoryがnullの場合税区分が空文字になる", () => {
 		const csv = formatFreee([sampleTx2]);
 		const lines = csv.split("\n");
-		expect(lines[1]).toBe("2026-01-20,旅費交通費,320,現金,320,電車代,");
+		expect(lines[1]).toBe("2026-01-20,Office Rent,320,Cash,320,電車代,");
 	});
 
 	it("摘要にダブルクォートを含む場合エスケープされる", () => {
@@ -87,7 +89,7 @@ describe("formatGeneric", () => {
 		const csv = formatGeneric([sampleTx]);
 		const lines = csv.split("\n");
 		expect(lines[0]).toBe("日付,摘要,借方科目,借方金額,貸方科目,貸方金額");
-		expect(lines[1]).toBe("2026-01-15,AWS利用料,通信費,5000,普通預金,5000");
+		expect(lines[1]).toBe("2026-01-15,AWS利用料,Software/Cloud/SaaS,5000,Bank Account,5000");
 	});
 
 	it("空配列ではヘッダーのみ返す", () => {
