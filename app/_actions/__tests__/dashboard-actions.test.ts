@@ -92,10 +92,34 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 100000, debit_account: "AST002", credit_account: "INC001", is_confirmed: true, business_use_ratio: 100 },
-					{ amount: 50000, debit_account: "AST002", credit_account: "INC002", is_confirmed: true, business_use_ratio: 100 },
-					{ amount: 5000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true, business_use_ratio: 100 },
-					{ amount: 3000, debit_account: "EXP003", credit_account: "AST002", is_confirmed: true, business_use_ratio: 100 },
+					{
+						amount: 100000,
+						debit_account: "AST002",
+						credit_account: "INC001",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 50000,
+						debit_account: "AST002",
+						credit_account: "INC002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP003",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
 				],
 				error: null,
 			},
@@ -117,9 +141,27 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 5000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true, business_use_ratio: 100 },
-					{ amount: 2000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true, business_use_ratio: 100 },
-					{ amount: 3000, debit_account: "EXP003", credit_account: "AST002", is_confirmed: true, business_use_ratio: 100 },
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 2000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP003",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
 				],
 				error: null,
 			},
@@ -144,8 +186,20 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 5000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true, business_use_ratio: 100 },
-					{ amount: 3000, debit_account: "EXP003", credit_account: "AST002", is_confirmed: false, business_use_ratio: 100 },
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP003",
+						credit_account: "AST002",
+						is_confirmed: false,
+						business_use_ratio: 100,
+					},
 					{
 						amount: 100000,
 						debit_account: "AST002",
@@ -225,7 +279,13 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 10000, debit_account: "EXP002", credit_account: "AST002", is_confirmed: true, business_use_ratio: 50 },
+					{
+						amount: 10000,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 50,
+					},
 				],
 				error: null,
 			},
@@ -244,7 +304,13 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 10000, debit_account: "EXP002", credit_account: "AST002", is_confirmed: true, business_use_ratio: 0 },
+					{
+						amount: 10000,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 0,
+					},
 				],
 				error: null,
 			},
@@ -263,7 +329,13 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 333, debit_account: "EXP002", credit_account: "AST002", is_confirmed: true, business_use_ratio: 33 },
+					{
+						amount: 333,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 33,
+					},
 				],
 				error: null,
 			},
