@@ -29,6 +29,18 @@ Phase 3 で PR を作成した後、必ず Phase 4 に進むこと。
    - npm run test:unit
    - npm run build
 
+### Phase 2.5: E2Eテスト整合性チェック
+
+UIに影響する変更（page.tsx、コンポーネント、勘定科目マスタ、ルーティング等）がある場合:
+
+1. 変更したファイルに関連するE2Eテストを Grep で特定:
+   grep -rl "関連キーワード" tests/e2e/
+2. 該当するE2Eテストの内容を確認し、変更と整合しているか検証
+3. 整合しない場合はE2Eテストを更新
+4. ローカルでE2Eテスト実行（npm run dev が起動中の場合）:
+   npx playwright test tests/e2e/該当ファイル.spec.ts --project=chromium
+5. 失敗する場合は修正してから Phase 3 に進む
+
 ### Phase 3: PR 作成
 
 10. `/create-pr` で PR を作成
