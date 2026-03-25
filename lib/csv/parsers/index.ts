@@ -6,6 +6,7 @@ export {
 	revolutRowSchemaJa,
 } from "./revolut";
 export { detectSmbcFromContent, parseSmbcCsv } from "./smbc";
+export { parseSonyBankCsv } from "./sony-bank";
 export type { CsvFormat, ParsedTransaction } from "./types";
 export { normalizeDate, parseAmount, splitCsvLine } from "./types";
 export { parseWiseCsv, wiseRowSchema } from "./wise";
@@ -14,6 +15,7 @@ import { parseGenericCsv } from "./generic";
 import { parseRakutenCsv } from "./rakuten";
 import { parseRevolutCsv } from "./revolut";
 import { detectSmbcFromContent, parseSmbcCsv } from "./smbc";
+import { parseSonyBankCsv as parseSonyBank } from "./sony-bank";
 import type { CsvFormat, ParsedTransaction } from "./types";
 import { splitCsvLine } from "./types";
 import { parseWiseCsv } from "./wise";
@@ -53,6 +55,15 @@ export function detectCsvFormat(headers: string[]): CsvFormat {
 		return "revolut";
 	}
 
+	// ソニー銀行: お取引日 + お引出し金額 + お預入れ金額 の組み合わせ
+	if (
+		headers.some((h) => h.trim() === "お取引日") &&
+		headers.some((h) => h.trim() === "お引出し金額") &&
+		headers.some((h) => h.trim() === "お預入れ金額")
+	) {
+		return "sony-bank";
+	}
+
 	return "generic";
 }
 
@@ -82,6 +93,8 @@ export function parseCsv(csvText: string): {
 			return { format, transactions: parseRakutenCsv(csvText) };
 		case "revolut":
 			return { format, transactions: parseRevolutCsv(csvText) };
+		case "sony-bank":
+			return { format, transactions: parseSonyBank(csvText) };
 		default:
 			return { format: "generic", transactions: parseGenericCsv(csvText) };
 	}

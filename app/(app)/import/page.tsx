@@ -27,6 +27,7 @@ const FORMAT_LABELS: Record<CsvFormat, string> = {
 	revolut: "Revolut",
 	smbc: "三井住友カード",
 	rakuten: "楽天カード",
+	"sony-bank": "ソニー銀行",
 	generic: "汎用CSV",
 };
 
@@ -229,7 +230,7 @@ export default function ImportPage() {
 						<Input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileSelect} />
 						<p className="text-xs text-muted-foreground">
 							<FileText className="inline size-3 mr-1" />
-							CSV形式、最大5MB（Wise / Revolut / 三井住友カード / 楽天カード対応）
+							CSV形式、最大5MB（Wise / Revolut / 三井住友カード / 楽天カード / ソニー銀行対応）
 						</p>
 					</div>
 					{error && <p className="text-sm text-destructive">{error}</p>}
