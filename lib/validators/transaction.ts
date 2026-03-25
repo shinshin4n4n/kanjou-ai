@@ -20,6 +20,13 @@ export const createTransactionSchema = z.object({
 	creditAccount: accountCodeSchema,
 	taxCategory: taxCategorySchema.optional(),
 	memo: z.string().max(500).optional(),
+	businessUseRatio: z
+		.number()
+		.int("整数で入力")
+		.min(0, "0以上で入力")
+		.max(100, "100以下で入力")
+		.default(100)
+		.optional(),
 });
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
