@@ -91,6 +91,7 @@ const sampleTransaction = {
 	original_currency: null,
 	exchange_rate: null,
 	fees: null,
+	business_use_ratio: 100,
 	source: "manual",
 	import_log_id: null,
 	created_at: "2026-01-15T00:00:00Z",
@@ -208,9 +209,7 @@ describe("transaction-commands", () => {
 			const result = await createTransaction({ ...validCreateInput, businessUseRatio: 50 });
 
 			expect(result.success).toBe(true);
-			expect(mock.insert).toHaveBeenCalledWith(
-				expect.objectContaining({ business_use_ratio: 50 }),
-			);
+			expect(mock.insert).toHaveBeenCalledWith(expect.objectContaining({ business_use_ratio: 50 }));
 		});
 
 		it("按分率未指定時はデフォルト100で作成される", async () => {
@@ -284,9 +283,7 @@ describe("transaction-commands", () => {
 			});
 
 			expect(result.success).toBe(true);
-			expect(mock.update).toHaveBeenCalledWith(
-				expect.objectContaining({ business_use_ratio: 30 }),
-			);
+			expect(mock.update).toHaveBeenCalledWith(expect.objectContaining({ business_use_ratio: 30 }));
 		});
 
 		it("部分更新ができる", async () => {
