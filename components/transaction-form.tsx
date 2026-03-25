@@ -100,7 +100,7 @@ export function TransactionForm({ transaction }: TransactionFormProps) {
 			creditAccount,
 			...(taxCategory && { taxCategory }),
 			...(memo && { memo }),
-			businessUseRatio: Number(businessUseRatio),
+			businessUseRatio: businessUseRatio === "" ? 100 : Number(businessUseRatio),
 		};
 
 		const result = isEdit

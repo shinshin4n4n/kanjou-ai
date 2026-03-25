@@ -40,7 +40,7 @@ export async function createTransaction(
 				credit_account: parsed.data.creditAccount,
 				tax_category: parsed.data.taxCategory ?? null,
 				memo: parsed.data.memo ?? null,
-				business_use_ratio: parsed.data.businessUseRatio ?? 100,
+				business_use_ratio: parsed.data.businessUseRatio,
 				is_confirmed: false,
 				source: "manual",
 			})

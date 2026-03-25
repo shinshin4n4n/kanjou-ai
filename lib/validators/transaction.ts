@@ -25,11 +25,11 @@ export const createTransactionSchema = z.object({
 		.int("整数で入力")
 		.min(0, "0以上で入力")
 		.max(100, "100以下で入力")
-		.default(100)
-		.optional(),
+		.optional()
+		.default(100),
 });
 
-export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+export type CreateTransactionInput = z.input<typeof createTransactionSchema>;
 
 export const updateTransactionSchema = createTransactionSchema.partial().extend({
 	id: z.string().uuid("無効なIDです"),
