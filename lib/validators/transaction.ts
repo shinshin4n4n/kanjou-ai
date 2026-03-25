@@ -20,9 +20,16 @@ export const createTransactionSchema = z.object({
 	creditAccount: accountCodeSchema,
 	taxCategory: taxCategorySchema.optional(),
 	memo: z.string().max(500).optional(),
+	businessUseRatio: z
+		.number()
+		.int("整数で入力")
+		.min(0, "0以上で入力")
+		.max(100, "100以下で入力")
+		.optional()
+		.default(100),
 });
 
-export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+export type CreateTransactionInput = z.input<typeof createTransactionSchema>;
 
 export const updateTransactionSchema = createTransactionSchema.partial().extend({
 	id: z.string().uuid("無効なIDです"),

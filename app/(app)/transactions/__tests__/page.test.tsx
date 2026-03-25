@@ -52,6 +52,7 @@ const transactionFixture: Tables<"transactions"> = {
 	original_amount: null,
 	exchange_rate: null,
 	fees: null,
+	business_use_ratio: 100,
 	deleted_at: null,
 	created_at: "2026-01-01T00:00:00Z",
 	updated_at: "2026-01-01T00:00:00Z",

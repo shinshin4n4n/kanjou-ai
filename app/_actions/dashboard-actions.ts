@@ -56,7 +56,7 @@ export async function getDashboardData(params: {
 
 		const { data: transactions, error: txError } = await supabase
 			.from("transactions")
-			.select("amount, debit_account, credit_account, is_confirmed")
+			.select("amount, debit_account, credit_account, is_confirmed, business_use_ratio")
 			.eq("user_id", userId)
 			.gte("transaction_date", monthStart)
 			.lte("transaction_date", monthEnd)
@@ -74,8 +74,9 @@ export async function getDashboardData(params: {
 			const creditInfo = ACCOUNT_CATEGORIES[tx.credit_account as keyof typeof ACCOUNT_CATEGORIES];
 
 			if (debitInfo?.type === "expense") {
-				expense += tx.amount;
-				expenseMap.set(tx.debit_account, (expenseMap.get(tx.debit_account) ?? 0) + tx.amount);
+				const deductible = Math.floor((tx.amount * (tx.business_use_ratio ?? 100)) / 100);
+				expense += deductible;
+				expenseMap.set(tx.debit_account, (expenseMap.get(tx.debit_account) ?? 0) + deductible);
 			} else if (creditInfo?.type === "income") {
 				income += tx.amount;
 			}

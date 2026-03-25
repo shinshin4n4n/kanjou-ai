@@ -222,6 +222,7 @@ export type Database = {
 					ai_confidence: number | null;
 					ai_suggested: boolean;
 					amount: number;
+					business_use_ratio: number;
 					created_at: string;
 					credit_account: string;
 					debit_account: string;
@@ -245,6 +246,7 @@ export type Database = {
 					ai_confidence?: number | null;
 					ai_suggested?: boolean;
 					amount: number;
+					business_use_ratio?: number;
 					created_at?: string;
 					credit_account: string;
 					debit_account: string;
@@ -268,6 +270,7 @@ export type Database = {
 					ai_confidence?: number | null;
 					ai_suggested?: boolean;
 					amount?: number;
+					business_use_ratio?: number;
 					created_at?: string;
 					credit_account?: string;
 					debit_account?: string;

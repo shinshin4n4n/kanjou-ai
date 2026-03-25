@@ -82,6 +82,9 @@ export function TransactionForm({ transaction }: TransactionFormProps) {
 	const [creditAccount, setCreditAccount] = useState(transaction?.credit_account ?? "");
 	const [taxCategory, setTaxCategory] = useState(transaction?.tax_category ?? "");
 	const [memo, setMemo] = useState(transaction?.memo ?? "");
+	const [businessUseRatio, setBusinessUseRatio] = useState(
+		transaction?.business_use_ratio?.toString() ?? "100",
+	);
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
@@ -97,6 +100,7 @@ export function TransactionForm({ transaction }: TransactionFormProps) {
 			creditAccount,
 			...(taxCategory && { taxCategory }),
 			...(memo && { memo }),
+			businessUseRatio: businessUseRatio === "" ? 100 : Number(businessUseRatio),
 		};
 
 		const result = isEdit
@@ -169,6 +173,20 @@ export function TransactionForm({ transaction }: TransactionFormProps) {
 						value={creditAccount}
 						onValueChange={setCreditAccount}
 					/>
+
+					<div className="space-y-2">
+						<Label htmlFor="businessUseRatio">事業按分率（%）</Label>
+						<Input
+							id="businessUseRatio"
+							type="number"
+							value={businessUseRatio}
+							onChange={(e) => setBusinessUseRatio(e.target.value)}
+							min={0}
+							max={100}
+							step={1}
+							placeholder="100"
+						/>
+					</div>
 
 					<div className="space-y-2">
 						<Label htmlFor="taxCategory">税区分（任意）</Label>

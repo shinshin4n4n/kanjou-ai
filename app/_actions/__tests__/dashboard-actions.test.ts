@@ -35,6 +35,7 @@ type TransactionRow = {
 	debit_account: string;
 	credit_account: string;
 	is_confirmed: boolean;
+	business_use_ratio: number;
 };
 
 type ImportLogRow = {
@@ -91,10 +92,34 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 100000, debit_account: "AST002", credit_account: "INC001", is_confirmed: true },
-					{ amount: 50000, debit_account: "AST002", credit_account: "INC002", is_confirmed: true },
-					{ amount: 5000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true },
-					{ amount: 3000, debit_account: "EXP003", credit_account: "AST002", is_confirmed: true },
+					{
+						amount: 100000,
+						debit_account: "AST002",
+						credit_account: "INC001",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 50000,
+						debit_account: "AST002",
+						credit_account: "INC002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP003",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
 				],
 				error: null,
 			},
@@ -116,9 +141,27 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 5000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true },
-					{ amount: 2000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true },
-					{ amount: 3000, debit_account: "EXP003", credit_account: "AST002", is_confirmed: true },
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 2000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP003",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
 				],
 				error: null,
 			},
@@ -143,13 +186,26 @@ describe("getDashboardData", () => {
 		createSupabaseMock(
 			{
 				data: [
-					{ amount: 5000, debit_account: "EXP001", credit_account: "AST002", is_confirmed: true },
-					{ amount: 3000, debit_account: "EXP003", credit_account: "AST002", is_confirmed: false },
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP003",
+						credit_account: "AST002",
+						is_confirmed: false,
+						business_use_ratio: 100,
+					},
 					{
 						amount: 100000,
 						debit_account: "AST002",
 						credit_account: "INC001",
 						is_confirmed: false,
+						business_use_ratio: 100,
 					},
 				],
 				error: null,
@@ -216,6 +272,82 @@ describe("getDashboardData", () => {
 		expect(result.success).toBe(false);
 		if (result.success) return;
 		expect(result.code).toBe("VALIDATION_ERROR");
+	});
+
+	it("按分率50%の経費が半額で集計される", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 10000,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 50,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		expect(result.data.expense).toBe(5000);
+	});
+
+	it("按分率0%で経費が0になる", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 10000,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 0,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		expect(result.data.expense).toBe(0);
+	});
+
+	it("端数計算: 奇数金額×奇数%はfloorで切り捨て", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 333,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 33,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		// 333 * 33 / 100 = 109.89 → floor → 109
+		expect(result.data.expense).toBe(109);
 	});
 
 	it("取引0件の場合、全て0/空配列を返す", async () => {

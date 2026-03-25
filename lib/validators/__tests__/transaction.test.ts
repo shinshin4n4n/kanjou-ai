@@ -169,6 +169,63 @@ describe("getTransactionsSchema - search", () => {
 	});
 });
 
+describe("createTransactionSchema - businessUseRatio", () => {
+	const baseInput = {
+		transactionDate: "2026-03-01",
+		description: "通信費",
+		amount: 10000,
+		debitAccount: "EXP002",
+		creditAccount: "AST002",
+	};
+
+	it("按分率0%を受け入れる", () => {
+		const result = createTransactionSchema.safeParse({ ...baseInput, businessUseRatio: 0 });
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.businessUseRatio).toBe(0);
+		}
+	});
+
+	it("按分率50%を受け入れる", () => {
+		const result = createTransactionSchema.safeParse({ ...baseInput, businessUseRatio: 50 });
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.businessUseRatio).toBe(50);
+		}
+	});
+
+	it("按分率100%を受け入れる", () => {
+		const result = createTransactionSchema.safeParse({ ...baseInput, businessUseRatio: 100 });
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.businessUseRatio).toBe(100);
+		}
+	});
+
+	it("按分率未指定時はデフォルト100になる", () => {
+		const result = createTransactionSchema.safeParse(baseInput);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.businessUseRatio).toBe(100);
+		}
+	});
+
+	it("按分率-1を拒否する", () => {
+		const result = createTransactionSchema.safeParse({ ...baseInput, businessUseRatio: -1 });
+		expect(result.success).toBe(false);
+	});
+
+	it("按分率101を拒否する", () => {
+		const result = createTransactionSchema.safeParse({ ...baseInput, businessUseRatio: 101 });
+		expect(result.success).toBe(false);
+	});
+
+	it("按分率の小数を拒否する", () => {
+		const result = createTransactionSchema.safeParse({ ...baseInput, businessUseRatio: 33.3 });
+		expect(result.success).toBe(false);
+	});
+});
+
 describe("createTransactionSchema - Malaysia Form B codes", () => {
 	it("新規 income コード INC003 を受け入れる", () => {
 		const input = {

@@ -40,6 +40,7 @@ export async function createTransaction(
 				credit_account: parsed.data.creditAccount,
 				tax_category: parsed.data.taxCategory ?? null,
 				memo: parsed.data.memo ?? null,
+				business_use_ratio: parsed.data.businessUseRatio,
 				is_confirmed: false,
 				source: "manual",
 			})
@@ -77,6 +78,7 @@ export async function updateTransaction(
 			...(fields.creditAccount !== undefined && { credit_account: fields.creditAccount }),
 			...(fields.taxCategory !== undefined && { tax_category: fields.taxCategory }),
 			...(fields.memo !== undefined && { memo: fields.memo }),
+			...(fields.businessUseRatio !== undefined && { business_use_ratio: fields.businessUseRatio }),
 			...(isConfirmed !== undefined && { is_confirmed: isConfirmed }),
 		};
 
