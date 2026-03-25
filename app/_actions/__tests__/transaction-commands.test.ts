@@ -200,6 +200,32 @@ describe("transaction-commands", () => {
 			}
 		});
 
+		it("按分率を指定して取引を作成できる", async () => {
+			mockAuthSuccess();
+			const created = { ...sampleTransaction, business_use_ratio: 50 };
+			const { mock } = createMutationMock({ data: created, error: null });
+
+			const result = await createTransaction({ ...validCreateInput, businessUseRatio: 50 });
+
+			expect(result.success).toBe(true);
+			expect(mock.insert).toHaveBeenCalledWith(
+				expect.objectContaining({ business_use_ratio: 50 }),
+			);
+		});
+
+		it("按分率未指定時はデフォルト100で作成される", async () => {
+			mockAuthSuccess();
+			const created = { ...sampleTransaction, business_use_ratio: 100 };
+			const { mock } = createMutationMock({ data: created, error: null });
+
+			const result = await createTransaction(validCreateInput);
+
+			expect(result.success).toBe(true);
+			expect(mock.insert).toHaveBeenCalledWith(
+				expect.objectContaining({ business_use_ratio: 100 }),
+			);
+		});
+
 		it("作成後にrevalidatePathが呼ばれる", async () => {
 			mockAuthSuccess();
 			createMutationMock({ data: sampleTransaction, error: null });
@@ -245,6 +271,22 @@ describe("transaction-commands", () => {
 			if (!result.success) {
 				expect(result.code).toBe("VALIDATION_ERROR");
 			}
+		});
+
+		it("按分率を更新できる", async () => {
+			mockAuthSuccess();
+			const updated = { ...sampleTransaction, business_use_ratio: 30 };
+			const { mock } = createMutationMock({ data: updated, error: null });
+
+			const result = await updateTransaction({
+				id: TEST_UUID,
+				businessUseRatio: 30,
+			});
+
+			expect(result.success).toBe(true);
+			expect(mock.update).toHaveBeenCalledWith(
+				expect.objectContaining({ business_use_ratio: 30 }),
+			);
 		});
 
 		it("部分更新ができる", async () => {
