@@ -1,6 +1,26 @@
 # KanjouAI - Development Guide
 
 > **グローバルルール**: 言語設定・TDD・コミット規約・ブランチ戦略などの横断ルールは `~/.claude/CLAUDE.md` に定義されています（Git管理外）。
+> 初回セットアップ: `~/.claude/CLAUDE.md` を作成し、`docs: ~/.claude/CLAUDE.md セットアップ` セクションの内容を記述してください。
+
+## ~/.claude/CLAUDE.md セットアップ（初回のみ）
+
+新しい環境でクローンした際は以下を実行してください:
+
+```bash
+mkdir -p ~/.claude && cat > ~/.claude/CLAUDE.md << 'EOF'
+# Global Development Rules
+
+- 日本語でコミュニケーション
+- TDD を常に遵守（Red-Green-Refactor）
+- コミットメッセージは Conventional Commits 形式（feat:/fix:/refactor:/test:/docs:/chore:）
+- テスト未通過のコードをコミットしない
+- 新規ライブラリ導入時は Context7 MCP で最新版確認
+- main ブランチへの直接プッシュ禁止。全ての変更は feature ブランチ → PR → マージ
+EOF
+```
+
+
 
 このドキュメントは、Claude Code がこのプロジェクトを理解し、一貫性のあるコード提案を行うためのコアガイドです。
 
@@ -69,7 +89,7 @@
 
 - **認証チェック**: `lib/auth.ts` の `getUser()`, `requireAuth()` を使用
 
-## Testing（TDD必須）
+## Testing
 
 詳細は `.claude/testing.md` を参照してください。
 
@@ -204,6 +224,6 @@ IMPORTANT: コンパクション（/compact またはオートコンパクショ
 
 ---
 
-**Document Version:** 1.1.0
-**Last Updated:** 2026-03-10
+**Document Version:** 1.2.0
+**Last Updated:** 2026-03-29
 **Next Review:** 2026-05-28
