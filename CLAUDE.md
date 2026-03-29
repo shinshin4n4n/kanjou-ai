@@ -1,5 +1,7 @@
 # KanjouAI - Development Guide
 
+> **グローバルルール**: 言語設定・TDD・コミット規約・ブランチ戦略などの横断ルールは `~/.claude/CLAUDE.md` に定義されています（Git管理外）。
+
 このドキュメントは、Claude Code がこのプロジェクトを理解し、一貫性のあるコード提案を行うためのコアガイドです。
 
 ## Tech Stack
@@ -17,17 +19,14 @@
 
 1. **Server Actions は必ず `ApiResponse<T>` を返す**
 2. **全エラーは `handleApiError()` で処理**
-3. **TDD必須: テストを先に書いてから実装**（Red-Green-Refactor）
-4. **テストカバレッジ 80%以上必須**
-5. **`any` 型禁止**
-6. **全テーブルで RLS 有効化**
-7. **PRサイズ: 300行以下 / 10ファイル以下**（詳細は `.claude/task-checklists.md`）
-8. **Plan mode で推定サイズを記載**（300行超は分割計画必須）
-9. **PR作成前に `git diff --stat` でサイズ確認**（超過時はPR作成中断）
-10. **新規ライブラリ導入時は Context7 MCP で最新版確認**
-11. **main ブランチへの直接プッシュ禁止**。全ての変更は feature ブランチ → PR → マージの流れで行う。ドキュメントのみの変更でも同様
-12. **`/create-pr` 実行時、PR作成後に必ず `gh pr review --comment` でセルフレビューコメントを投稿すること**。スキップ不可
-13. **ページコンポーネント（page.tsx）にユーザー操作（ボタンクリック、フォーム送信、ファイルアップロード等）がある場合、UIインタラクションのテストも必須**
+3. **テストカバレッジ 80%以上必須**
+4. **`any` 型禁止**
+5. **全テーブルで RLS 有効化**
+6. **PRサイズ: 300行以下 / 10ファイル以下**（詳細は `.claude/task-checklists.md`）
+7. **Plan mode で推定サイズを記載**（300行超は分割計画必須）
+8. **PR作成前に `git diff --stat` でサイズ確認**（超過時はPR作成中断）
+9. **`/create-pr` 実行時、PR作成後に必ず `gh pr review --comment` でセルフレビューコメントを投稿すること**。スキップ不可
+10. **ページコンポーネント（page.tsx）にユーザー操作（ボタンクリック、フォーム送信、ファイルアップロード等）がある場合、UIインタラクションのテストも必須**
 
 ## Architecture Patterns
 
@@ -114,11 +113,6 @@
 - **strict mode** 有効
 - `any` 型は禁止（型ガードを使用）
 - Optional chaining (`?.`) を活用
-
-### Commits
-
-- **Conventional Commits** 形式
-  - `feat:` / `fix:` / `refactor:` / `test:` / `docs:` / `chore:`
 
 ### Lint & Format
 
