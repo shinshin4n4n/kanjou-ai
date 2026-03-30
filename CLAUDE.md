@@ -199,6 +199,15 @@ Supabaseの最新の認証実装方法を教えて。use context7
 - **React 19** と **Next.js 16** の最新機能活用
 - **Server Actions** 優先
 
+## Compact Instructions
+
+IMPORTANT: コンパクション（/compact またはオートコンパクション）時は以下を必ず保持すること:
+- 変更済みファイルの完全リスト（パス付き）
+- 現在の TDD フェーズ（RED/GREEN/REFACTOR）とテスト実行結果
+- 未完了タスクと次のステップ
+- 現在作業中の Issue 番号とブランチ名
+- 重要な設計判断とその理由
+
 ---
 
 **Document Version:** 1.1.0
