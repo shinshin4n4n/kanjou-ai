@@ -3,20 +3,12 @@ import { expect, test } from "@playwright/test";
 test.describe("Transactions", () => {
 	const testDescription = `E2Eテスト取引 ${Date.now()}`;
 	// Use today's date so the transaction appears on page 1 (default sort: transaction_date DESC)
-	const today = new Date().toISOString().split("T")[0];
+	const today = new Date().toISOString().split("T")[0] as string;
 
 	test("should create a new transaction", async ({ page }) => {
 		await page.goto("/transactions/new");
 
-		// Set date via JS (native date input fill can be unreliable across browsers)
-		await page.locator("#transactionDate").evaluate((el, val) => {
-			const input = el as HTMLInputElement;
-			const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-			setter?.call(input, val);
-			input.dispatchEvent(new Event("input", { bubbles: true }));
-			input.dispatchEvent(new Event("change", { bubbles: true }));
-		}, today);
-
+		await page.locator("#transactionDate").fill(today);
 		await page.locator("#description").fill(testDescription);
 		await page.locator("#amount").fill("1000");
 
@@ -30,8 +22,16 @@ test.describe("Transactions", () => {
 
 		await page.getByRole("button", { name: "保存" }).click();
 
-		// Should redirect to transactions list
-		await page.waitForURL("**/transactions", { timeout: 15000 });
+		// Should redirect to transactions list; surface form errors on timeout
+		const errorLocator = page.locator(".text-destructive");
+		const redirected = page
+			.waitForURL("**/transactions", { timeout: 15000 })
+			.then(() => true as const);
+		const errorShown = errorLocator.waitFor({ state: "visible", timeout: 15000 }).then(async () => {
+			const msg = await errorLocator.textContent();
+			throw new Error(`Transaction save failed with form error: ${msg}`);
+		});
+		await Promise.race([redirected, errorShown]);
 		await expect(page).toHaveURL(/\/transactions/);
 
 		// Wait for revalidation and reload to ensure fresh data
