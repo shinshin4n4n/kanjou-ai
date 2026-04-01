@@ -36,6 +36,8 @@ type TransactionRow = {
 	credit_account: string;
 	is_confirmed: boolean;
 	business_use_ratio: number;
+	original_currency: string | null;
+	original_amount: number | null;
 };
 
 type ImportLogRow = {
@@ -98,6 +100,8 @@ describe("getDashboardData", () => {
 						credit_account: "INC001",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 50000,
@@ -105,6 +109,8 @@ describe("getDashboardData", () => {
 						credit_account: "INC002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 5000,
@@ -112,6 +118,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 3000,
@@ -119,6 +127,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 				],
 				error: null,
@@ -147,6 +157,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 2000,
@@ -154,6 +166,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 3000,
@@ -161,6 +175,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 				],
 				error: null,
@@ -192,6 +208,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 3000,
@@ -199,6 +217,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: false,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 					{
 						amount: 100000,
@@ -206,6 +226,8 @@ describe("getDashboardData", () => {
 						credit_account: "INC001",
 						is_confirmed: false,
 						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
 					},
 				],
 				error: null,
@@ -285,6 +307,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 50,
+						original_currency: null,
+						original_amount: null,
 					},
 				],
 				error: null,
@@ -310,6 +334,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 0,
+						original_currency: null,
+						original_amount: null,
 					},
 				],
 				error: null,
@@ -335,6 +361,8 @@ describe("getDashboardData", () => {
 						credit_account: "AST002",
 						is_confirmed: true,
 						business_use_ratio: 33,
+						original_currency: null,
+						original_amount: null,
 					},
 				],
 				error: null,
@@ -364,5 +392,173 @@ describe("getDashboardData", () => {
 		expect(result.data.expenseBreakdown).toEqual([]);
 		expect(result.data.unconfirmedCount).toBe(0);
 		expect(result.data.recentImports).toEqual([]);
+		expect(result.data.currencySummary).toEqual([]);
+	});
+
+	it("複数通貨の取引が通貨別に正しく集計される", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 5000,
+						debit_account: "AST002",
+						credit_account: "INC001",
+						is_confirmed: true,
+						business_use_ratio: 100,
+						original_currency: "MYR",
+						original_amount: 150,
+					},
+					{
+						amount: 3000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+						original_currency: "MYR",
+						original_amount: 90,
+					},
+					{
+						amount: 15000,
+						debit_account: "AST002",
+						credit_account: "INC002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+						original_currency: "USD",
+						original_amount: 100,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+
+		const myr = result.data.currencySummary.find((c) => c.currency === "MYR");
+		expect(myr).toEqual({
+			currency: "MYR",
+			symbol: "RM",
+			income: 150,
+			expense: 90,
+			balance: 60,
+		});
+
+		const usd = result.data.currencySummary.find((c) => c.currency === "USD");
+		expect(usd).toEqual({
+			currency: "USD",
+			symbol: "$",
+			income: 100,
+			expense: 0,
+			balance: 100,
+		});
+	});
+
+	it("original_currencyがnullの場合はJPYとして扱う", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 10000,
+						debit_account: "AST002",
+						credit_account: "INC001",
+						is_confirmed: true,
+						business_use_ratio: 100,
+						original_currency: null,
+						original_amount: null,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+
+		const jpy = result.data.currencySummary.find((c) => c.currency === "JPY");
+		expect(jpy).toEqual({
+			currency: "JPY",
+			symbol: "¥",
+			income: 10000,
+			expense: 0,
+			balance: 10000,
+		});
+	});
+
+	it("original_amountがnullの場合はamountにフォールバック", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 5000,
+						debit_account: "EXP001",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 100,
+						original_currency: "USD",
+						original_amount: null,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+
+		const usd = result.data.currencySummary.find((c) => c.currency === "USD");
+		expect(usd).toEqual({
+			currency: "USD",
+			symbol: "$",
+			income: 0,
+			expense: 5000,
+			balance: -5000,
+		});
+	});
+
+	it("通貨別集計でも按分率が適用される", async () => {
+		mockAuthSuccess();
+		createSupabaseMock(
+			{
+				data: [
+					{
+						amount: 3000,
+						debit_account: "EXP002",
+						credit_account: "AST002",
+						is_confirmed: true,
+						business_use_ratio: 50,
+						original_currency: "MYR",
+						original_amount: 100,
+					},
+				],
+				error: null,
+			},
+			{ data: [], error: null },
+		);
+
+		const result = await getDashboardData({ month: "2026-03" });
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+
+		const myr = result.data.currencySummary.find((c) => c.currency === "MYR");
+		expect(myr).toEqual({
+			currency: "MYR",
+			symbol: "RM",
+			income: 0,
+			expense: 50,
+			balance: -50,
+		});
 	});
 });

@@ -6,7 +6,7 @@ import { handleApiError } from "@/lib/api/error";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/lib/types/api";
-import { ACCOUNT_CATEGORIES } from "@/lib/utils/constants";
+import { ACCOUNT_CATEGORIES, CURRENCY_SYMBOLS } from "@/lib/utils/constants";
 
 const dashboardParamsSchema = z.object({
 	month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "月はYYYY-MM形式で入力してください"),
@@ -29,6 +29,13 @@ type DashboardData = {
 		status: string;
 		rowCount: number | null;
 		createdAt: string;
+	}[];
+	currencySummary: {
+		currency: string;
+		symbol: string;
+		income: number;
+		expense: number;
+		balance: number;
 	}[];
 };
 
@@ -56,7 +63,9 @@ export async function getDashboardData(params: {
 
 		const { data: transactions, error: txError } = await supabase
 			.from("transactions")
-			.select("amount, debit_account, credit_account, is_confirmed, business_use_ratio")
+			.select(
+				"amount, debit_account, credit_account, is_confirmed, business_use_ratio, original_currency, original_amount",
+			)
 			.eq("user_id", userId)
 			.gte("transaction_date", monthStart)
 			.lte("transaction_date", monthEnd)
@@ -67,24 +76,44 @@ export async function getDashboardData(params: {
 		let income = 0;
 		let expense = 0;
 		const expenseMap = new Map<string, number>();
+		const currencyMap = new Map<string, { income: number; expense: number }>();
 		let unconfirmedCount = 0;
 
 		for (const tx of transactions ?? []) {
 			const debitInfo = ACCOUNT_CATEGORIES[tx.debit_account as keyof typeof ACCOUNT_CATEGORIES];
 			const creditInfo = ACCOUNT_CATEGORIES[tx.credit_account as keyof typeof ACCOUNT_CATEGORIES];
+			const ratio = tx.business_use_ratio ?? 100;
+
+			const currency = (tx.original_currency ?? "JPY") as string;
+			const originalAmount = (tx.original_amount ?? tx.amount) as number;
+			const currencyEntry = currencyMap.get(currency) ?? { income: 0, expense: 0 };
 
 			if (debitInfo?.type === "expense") {
-				const deductible = Math.floor((tx.amount * (tx.business_use_ratio ?? 100)) / 100);
+				const deductible = Math.floor((tx.amount * ratio) / 100);
 				expense += deductible;
 				expenseMap.set(tx.debit_account, (expenseMap.get(tx.debit_account) ?? 0) + deductible);
+				currencyEntry.expense += Math.floor((originalAmount * ratio) / 100);
 			} else if (creditInfo?.type === "income") {
 				income += tx.amount;
+				currencyEntry.income += originalAmount;
 			}
+
+			currencyMap.set(currency, currencyEntry);
 
 			if (!tx.is_confirmed) {
 				unconfirmedCount++;
 			}
 		}
+
+		const currencySummary = Array.from(currencyMap.entries())
+			.map(([currency, { income: inc, expense: exp }]) => ({
+				currency,
+				symbol: CURRENCY_SYMBOLS[currency] ?? currency,
+				income: inc,
+				expense: exp,
+				balance: inc - exp,
+			}))
+			.sort((a, b) => a.currency.localeCompare(b.currency));
 
 		const expenseBreakdown = Array.from(expenseMap.entries())
 			.map(([code, amount]) => ({
@@ -121,6 +150,7 @@ export async function getDashboardData(params: {
 				expenseBreakdown,
 				unconfirmedCount,
 				recentImports,
+				currencySummary,
 			},
 		};
 	} catch (error) {
