@@ -55,8 +55,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mon
 		);
 	}
 
-	const { income, expense, balance, expenseBreakdown, unconfirmedCount, recentImports } =
-		result.data;
+	const {
+		income,
+		expense,
+		balance,
+		expenseBreakdown,
+		unconfirmedCount,
+		recentImports,
+		currencySummary,
+	} = result.data;
 
 	return (
 		<div className="flex flex-col gap-6 p-4 md:p-6">
@@ -109,6 +116,47 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mon
 					</CardContent>
 				</Card>
 			</div>
+
+			{/* Currency Summary */}
+			{currencySummary.length > 1 && (
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-base">通貨別サマリー</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+							{currencySummary.map((cs) => (
+								<div key={cs.currency} className="rounded-md border p-3">
+									<p className="text-sm font-medium text-muted-foreground">{cs.currency}</p>
+									<div className="mt-1 space-y-1 text-sm">
+										<div className="flex justify-between">
+											<span>収入</span>
+											<span className="text-green-600">
+												{cs.symbol}
+												{cs.income.toLocaleString()}
+											</span>
+										</div>
+										<div className="flex justify-between">
+											<span>支出</span>
+											<span className="text-red-600">
+												{cs.symbol}
+												{cs.expense.toLocaleString()}
+											</span>
+										</div>
+										<div className="flex justify-between border-t pt-1">
+											<span>差額</span>
+											<span className={cs.balance >= 0 ? "text-green-600" : "text-red-600"}>
+												{cs.symbol}
+												{cs.balance.toLocaleString()}
+											</span>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</CardContent>
+				</Card>
+			)}
 
 			{/* Bottom section: Expense Breakdown + Side Panel */}
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
