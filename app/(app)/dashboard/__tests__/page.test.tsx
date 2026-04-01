@@ -64,6 +64,7 @@ describe("DashboardPage", () => {
 				expenseBreakdown: [],
 				unconfirmedCount: 3,
 				recentImports: [],
+				currencySummary: [],
 			},
 		});
 		const jsx = await DashboardPage({ searchParams: Promise.resolve({}) });
@@ -85,6 +86,7 @@ describe("DashboardPage", () => {
 				expenseBreakdown: [],
 				unconfirmedCount: 0,
 				recentImports: [],
+				currencySummary: [],
 			},
 		});
 		const jsx = await DashboardPage({ searchParams: Promise.resolve({ month: "2026-03" }) });

@@ -97,6 +97,15 @@ export const UPLOAD_LIMITS = {
 	MAX_ROWS_PER_IMPORT: 2500,
 } as const;
 
+export const CURRENCY_SYMBOLS: Record<string, string> = {
+	JPY: "¥",
+	MYR: "RM",
+	USD: "$",
+	EUR: "€",
+	GBP: "£",
+	SGD: "S$",
+};
+
 export const RATE_LIMITS = {
 	AI_CLASSIFY_PER_MINUTE: 10,
 	CSV_IMPORT_PER_HOUR: 5,
