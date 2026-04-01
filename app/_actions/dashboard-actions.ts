@@ -76,42 +76,33 @@ export async function getDashboardData(params: {
 		let income = 0;
 		let expense = 0;
 		const expenseMap = new Map<string, number>();
+		const currencyMap = new Map<string, { income: number; expense: number }>();
 		let unconfirmedCount = 0;
 
 		for (const tx of transactions ?? []) {
 			const debitInfo = ACCOUNT_CATEGORIES[tx.debit_account as keyof typeof ACCOUNT_CATEGORIES];
 			const creditInfo = ACCOUNT_CATEGORIES[tx.credit_account as keyof typeof ACCOUNT_CATEGORIES];
+			const ratio = tx.business_use_ratio ?? 100;
+
+			const currency = (tx.original_currency ?? "JPY") as string;
+			const originalAmount = (tx.original_amount ?? tx.amount) as number;
+			const currencyEntry = currencyMap.get(currency) ?? { income: 0, expense: 0 };
 
 			if (debitInfo?.type === "expense") {
-				const deductible = Math.floor((tx.amount * (tx.business_use_ratio ?? 100)) / 100);
+				const deductible = Math.floor((tx.amount * ratio) / 100);
 				expense += deductible;
 				expenseMap.set(tx.debit_account, (expenseMap.get(tx.debit_account) ?? 0) + deductible);
+				currencyEntry.expense += Math.floor((originalAmount * ratio) / 100);
 			} else if (creditInfo?.type === "income") {
 				income += tx.amount;
+				currencyEntry.income += originalAmount;
 			}
+
+			currencyMap.set(currency, currencyEntry);
 
 			if (!tx.is_confirmed) {
 				unconfirmedCount++;
 			}
-		}
-
-		// Currency summary aggregation
-		const currencyMap = new Map<string, { income: number; expense: number }>();
-		for (const tx of transactions ?? []) {
-			const currency = (tx.original_currency as string | null) ?? "JPY";
-			const baseAmount = (tx.original_amount as number | null) ?? tx.amount;
-			const entry = currencyMap.get(currency) ?? { income: 0, expense: 0 };
-
-			const debitInfo2 = ACCOUNT_CATEGORIES[tx.debit_account as keyof typeof ACCOUNT_CATEGORIES];
-			const creditInfo2 = ACCOUNT_CATEGORIES[tx.credit_account as keyof typeof ACCOUNT_CATEGORIES];
-
-			if (debitInfo2?.type === "expense") {
-				entry.expense += Math.floor((baseAmount * (tx.business_use_ratio ?? 100)) / 100);
-			} else if (creditInfo2?.type === "income") {
-				entry.income += baseAmount;
-			}
-
-			currencyMap.set(currency, entry);
 		}
 
 		const currencySummary = Array.from(currencyMap.entries())
