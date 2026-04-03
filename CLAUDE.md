@@ -1,41 +1,23 @@
 # KanjouAI - Development Guide
 
-> **グローバルルール**: 言語設定・TDD・コミット規約・ブランチ戦略などの横断ルールは `~/.claude/CLAUDE.md` に定義されています（Git管理外）。
-> 初回セットアップ: `~/.claude/CLAUDE.md` を作成し、`docs: ~/.claude/CLAUDE.md セットアップ` セクションの内容を記述してください。
-
-## ~/.claude/CLAUDE.md セットアップ（初回のみ）
-
-新しい環境でクローンした際は以下を実行してください:
-
-```bash
-mkdir -p ~/.claude && cat > ~/.claude/CLAUDE.md << 'EOF'
-# Global Development Rules
-
-- 日本語でコミュニケーション
-- TDD を常に遵守（Red-Green-Refactor）
-- コミットメッセージは Conventional Commits 形式（feat:/fix:/refactor:/test:/docs:/chore:）
-- テスト未通過のコードをコミットしない
-- 新規ライブラリ導入時は Context7 MCP で最新版確認
-- main ブランチへの直接プッシュ禁止。全ての変更は feature ブランチ → PR → マージ
-EOF
-```
-
-
-
-このドキュメントは、Claude Code がこのプロジェクトを理解し、一貫性のあるコード提案を行うためのコアガイドです。
+> **グローバルルール**: `~/.claude/CLAUDE.md` を参照（言語設定・TDD・コミット規約・ブランチ戦略）
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 App Router + React 19
-- **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **Auth**: Email/Password（Google OAuth 対応予定）(Supabase Auth)
-- **Validation**: Zod 4
-- **AI**: Anthropic Claude API (仕訳推定)
-- **Styling**: Tailwind CSS 4 + lucide-react
-- **Testing**: Vitest 4 (Unit) + Playwright (E2E)
-- **Linter/Formatter**: Biome
+Next.js 16 (App Router) + React 19 / Supabase (PostgreSQL + Auth) / Zod 4 / Anthropic Claude API / Tailwind CSS 4 + lucide-react / Vitest 4 + Playwright / Biome
 
-## 🚨 Critical Rules (Must Follow)
+## Commands
+
+| コマンド | 用途 |
+|---------|------|
+| `npm run dev` | 開発サーバー起動 |
+| `npm run build` | ビルド |
+| `npm run typecheck` | 型チェック |
+| `npm run lint` | Lint (Biome) |
+| `npm run test:unit` | Unit テスト (Vitest) |
+| `npm run test:e2e` | E2E テスト (Playwright) |
+
+## Critical Rules
 
 1. **Server Actions は必ず `ApiResponse<T>` を返す**
 2. **全エラーは `handleApiError()` で処理**
@@ -43,179 +25,29 @@ EOF
 4. **`any` 型禁止**
 5. **全テーブルで RLS 有効化**
 6. **PRサイズ: 300行以下 / 10ファイル以下**（詳細は `.claude/task-checklists.md`）
-7. **Plan mode で推定サイズを記載**（300行超は分割計画必須）
-8. **PR作成前に `git diff --stat` でサイズ確認**（超過時はPR作成中断）
-9. **`/create-pr` 実行時、PR作成後に必ず `gh pr review --comment` でセルフレビューコメントを投稿すること**。スキップ不可
-10. **ページコンポーネント（page.tsx）にユーザー操作（ボタンクリック、フォーム送信、ファイルアップロード等）がある場合、UIインタラクションのテストも必須**
+7. **ページコンポーネントにユーザー操作がある場合、UIインタラクションテスト必須**
 
-## Architecture Patterns
+## Architecture & Guides
 
-詳細は `.claude/architecture.md` を参照してください。
-
-### Server Actions
-
-- **配置**: `app/_actions/{domain}.ts`
-- **戻り値**: 必ず `ApiResponse<T>` を返す
-- **エラーハンドリング**: `lib/api/error.ts` の `handleApiError()` を使用
-
-### Database
-
-- **RLS**: 全テーブルで有効化
-- **Soft Delete**: `deleted_at IS NULL` パターン使用
-- **金額**: INTEGER（円単位、小数を避ける）
-
-### Client Components
-
-- **'use client'** ディレクティブを明示的に使用
-- **状態管理**: React hooks (useState, useEffect)
-- **データ取得**: Server Actions を呼び出し
-
-## Security
-
-詳細は `.claude/security.md` を参照してください。
-
-### エラーハンドリング
-
-- ❌ エラーレスポンスに `details`, `stack` を含めない
-- ❌ ユーザーのメールアドレスや個人情報をログに出力しない
-- ✅ 全エラーは `handleApiError()` で処理
-
-### ログ出力
-
-- 本番環境では `console.log` を使わない
-- `console.error`, `console.warn` のみ使用
-
-### 認証
-
-- **認証チェック**: `lib/auth.ts` の `getUser()`, `requireAuth()` を使用
-
-## Testing
-
-詳細は `.claude/testing.md` を参照してください。
-
-新機能の実装は **必ず Red-Green-Refactor サイクル** に従うこと。
-
-### TDD ワークフロー（全機能に適用）
-
-```
-1. 🔴 RED:   失敗するテストを先に書く
-2. 🟢 GREEN: テストを通す最小限の実装を書く
-3. 🔵 REFACTOR: テストが通る状態を維持しながらリファクタ
-```
-
-- テストを書く前に実装コードを書かない
-- テストが失敗することを確認してから実装に進む
-- 1サイクルの粒度は小さく（1メソッド/1ユースケース単位）
-- `/tdd` コマンドで TDD サイクルを開始
-
-### Unit Testing (Vitest)
-
-- **カバレッジ**: 80%以上必須
-- **実行**: `npm run test:unit`
-- **配置**: `{対象ファイルのパス}/__tests__/{ファイル名}.test.ts`
-- **パターン**: AAA（Arrange-Act-Assert）
-
-### E2E Testing (Playwright)
-
-- **実行**: `npm run test:e2e`
-- **配置**: `tests/e2e/{feature}.spec.ts`
-
-### CI
-
-- 全テスト通過が必須
-- `continue-on-error` は使わない
-- TypeScript 型チェックも必須
-
-## Code Style
-
-### TypeScript
-
-- **strict mode** 有効
-- `any` 型は禁止（型ガードを使用）
-- Optional chaining (`?.`) を活用
-
-### Lint & Format
-
-- **Biome** (lint + format 統合)
-
-### ファイル命名
-
-- **コンポーネント**: PascalCase (`UserProfile.tsx`)
-- **ユーティリティ**: kebab-case (`format-date.ts`)
-- **テスト**: `{name}.test.ts`
-- **Server Actions**: kebab-case (`transaction-actions.ts`)
-
-## Common Patterns
-
-```typescript
-// Supabase Client (Server)
-import { createClient } from "@/lib/supabase/server";
-const supabase = await createClient();
-
-// Supabase Client (Client)
-import { createClient } from "@/lib/supabase/client";
-const supabase = createClient();
-
-// Claude API (Always server-side)
-import { classifyTransactions } from "@/lib/claude/client";
-const results = await classifyTransactions(transactions);
-```
-
-## Task Guidelines
-
-- 機能追加時: `.claude/architecture.md` を参照
-- テスト作成時: `.claude/testing.md` を参照
-- セキュリティ作業: `.claude/security.md` を参照
-- タスクチェックリスト: `.claude/task-checklists.md` を参照
-
-## Best Practices
-
-1. **Server Components First**: デフォルトは Server Component
-2. **Type Safety**: `ApiResponse<T>` で統一
-3. **Error Handling**: 必ず `try-catch` + `handleApiError()`
-4. **Validation**: Zod で入力バリデーション
-5. **RLS**: データベースアクセスは RLS で保護
-6. **Revalidation**: データ更新後は `revalidatePath()` を呼ぶ
-7. **Testing**: 新機能には必ずテストを追加
-
-## Avoid These Patterns
-
-- ❌ `any` 型の使用
-- ❌ クライアント側での直接Supabaseクエリ
-- ❌ エラーの握りつぶし
-- ❌ `console.log` の本番コード残留
-- ❌ ハードコードされた文字列
-- ❌ 巨大なコンポーネント
-- ❌ グローバル状態の乱用
+- アーキテクチャ詳細: `.claude/architecture.md`
+- セキュリティ: `.claude/security.md`
+- テスト: `.claude/testing.md`
+- タスクチェックリスト: `.claude/task-checklists.md`
+- パススコープ付きルール: `.claude/rules/`
 
 ## Version Policy
 
-- 新規ライブラリ導入時は **Context7 MCP で最新安定版を確認**
-- `@latest` でインストール後、exact version で固定
-- `package.json` に `^` や `~` を使わない
-
-### Context7 MCP セットアップ（Claude Code 初回のみ）
-
-```bash
-claude mcp add context7 -- npx -y @upstash/context7-mcp
-```
-
-使用方法: プロンプトに `use context7` を追加する
-
-```
-Supabaseの最新の認証実装方法を教えて。use context7
-```
+新規ライブラリは Context7 MCP で最新安定版を確認。exact version で固定（`^` `~` 不可）。
 
 ## Notes
 
-- **Supabase Auth** を使用（NextAuth / better-auth は不使用）
-- **Zod 4** を使用（v3 ではない）
-- **React 19** と **Next.js 16** の最新機能活用
-- **Server Actions** 優先
+- Supabase Auth 使用（NextAuth / better-auth は不使用）
+- Zod 4・React 19・Next.js 16 の最新機能活用
+- Server Actions 優先
 
 ## Compact Instructions
 
-IMPORTANT: コンパクション（/compact またはオートコンパクション）時は以下を必ず保持すること:
+IMPORTANT: コンパクション時は以下を必ず保持すること:
 - 変更済みファイルの完全リスト（パス付き）
 - 現在の TDD フェーズ（RED/GREEN/REFACTOR）とテスト実行結果
 - 未完了タスクと次のステップ
@@ -224,6 +56,5 @@ IMPORTANT: コンパクション（/compact またはオートコンパクショ
 
 ---
 
-**Document Version:** 1.2.0
-**Last Updated:** 2026-03-29
-**Next Review:** 2026-05-28
+**Document Version:** 2.0.0
+**Last Updated:** 2026-04-04
