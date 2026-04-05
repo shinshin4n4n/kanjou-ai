@@ -5,7 +5,7 @@ test.describe("Transactions", () => {
 	// Use today's date so the transaction appears on page 1 (default sort: transaction_date DESC)
 	const today = new Date().toISOString().split("T")[0] as string;
 
-	test("should create a new transaction", async ({ page }) => {
+	test("should create a new transaction", async ({ page, browserName }) => {
 		await page.goto("/transactions/new");
 
 		await page.locator("#transactionDate").fill(today);
@@ -23,13 +23,14 @@ test.describe("Transactions", () => {
 		await page.getByRole("button", { name: "保存" }).click();
 
 		// Should redirect to transactions list; surface form errors on timeout
-		// Use expect().toHaveURL (Playwright recommended, auto-retry) with 30s timeout for webkit
+		// webkit has slower redirect after Server Action, so extend timeout
+		const timeout = browserName === "webkit" ? 30000 : 15000;
 		const errorLocator = page.locator(".text-destructive");
-		const errorShown = errorLocator.waitFor({ state: "visible", timeout: 30000 }).then(async () => {
+		const errorShown = errorLocator.waitFor({ state: "visible", timeout }).then(async () => {
 			const msg = await errorLocator.textContent();
 			throw new Error(`Transaction save failed with form error: ${msg}`);
 		});
-		const redirected = expect(page).toHaveURL(/\/transactions/, { timeout: 30000 });
+		const redirected = expect(page).toHaveURL(/\/transactions/, { timeout });
 		await Promise.race([redirected, errorShown]);
 
 		// Wait for revalidation and reload to ensure fresh data
