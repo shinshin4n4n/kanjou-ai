@@ -23,16 +23,14 @@ test.describe("Transactions", () => {
 		await page.getByRole("button", { name: "保存" }).click();
 
 		// Should redirect to transactions list; surface form errors on timeout
+		// Use expect().toHaveURL (Playwright recommended, auto-retry) with 30s timeout for webkit
 		const errorLocator = page.locator(".text-destructive");
-		const redirected = page
-			.waitForURL("**/transactions", { timeout: 15000 })
-			.then(() => true as const);
-		const errorShown = errorLocator.waitFor({ state: "visible", timeout: 15000 }).then(async () => {
+		const errorShown = errorLocator.waitFor({ state: "visible", timeout: 30000 }).then(async () => {
 			const msg = await errorLocator.textContent();
 			throw new Error(`Transaction save failed with form error: ${msg}`);
 		});
+		const redirected = expect(page).toHaveURL(/\/transactions/, { timeout: 30000 });
 		await Promise.race([redirected, errorShown]);
-		await expect(page).toHaveURL(/\/transactions/);
 
 		// Wait for revalidation and reload to ensure fresh data
 		await page.reload({ waitUntil: "networkidle" });
