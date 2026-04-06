@@ -40,11 +40,9 @@ else
 "
 fi
 
-# Use jq if available, otherwise produce JSON manually with printf
+# Use jq for safe JSON encoding (required); exit silently if jq is not installed
 if command -v jq &>/dev/null; then
   printf '%s' "$CONTEXT" | jq -Rs '{"additionalContext": .}'
 else
-  # Fallback: escape backslashes and double-quotes, replace newlines with \n
-  ESCAPED=$(printf '%s' "$CONTEXT" | sed 's/\/\\/g; s/"/\\"/g' | awk '{printf "%s\n", $0}')
-  printf '{"additionalContext": "%s"}\n' "$ESCAPED"
+  exit 0
 fi
