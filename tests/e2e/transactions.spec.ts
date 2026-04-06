@@ -26,12 +26,13 @@ test.describe("Transactions", () => {
 		// webkit has slower redirect after Server Action, so extend timeout
 		const timeout = browserName === "webkit" ? 30000 : 15000;
 		const errorLocator = page.locator(".text-destructive");
+		const redirected = page.waitForURL("**/transactions", { timeout }).then(() => true as const);
 		const errorShown = errorLocator.waitFor({ state: "visible", timeout }).then(async () => {
 			const msg = await errorLocator.textContent();
 			throw new Error(`Transaction save failed with form error: ${msg}`);
 		});
-		const redirected = expect(page).toHaveURL(/\/transactions/, { timeout });
 		await Promise.race([redirected, errorShown]);
+		await expect(page).toHaveURL(/\/transactions$/);
 
 		// Wait for revalidation and reload to ensure fresh data
 		await page.reload({ waitUntil: "networkidle" });
