@@ -5,7 +5,7 @@ set -euo pipefail
 
 BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 
-DIRTY=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+DIRTY=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ' || echo "0")
 if [ "$DIRTY" -gt 0 ]; then
   DIRTY_STATUS="あり（${DIRTY}ファイル）"
 else
@@ -40,4 +40,11 @@ else
 "
 fi
 
-printf '%s' "$CONTEXT" | jq -Rs '{"additionalContext": .}'
+# Use jq if available, otherwise produce JSON manually with printf
+if command -v jq &>/dev/null; then
+  printf '%s' "$CONTEXT" | jq -Rs '{"additionalContext": .}'
+else
+  # Fallback: escape backslashes and double-quotes, replace newlines with \n
+  ESCAPED=$(printf '%s' "$CONTEXT" | sed 's/\/\\/g; s/"/\\"/g' | awk '{printf "%s\n", $0}')
+  printf '{"additionalContext": "%s"}\n' "$ESCAPED"
+fi
