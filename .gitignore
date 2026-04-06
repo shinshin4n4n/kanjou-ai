@@ -5,6 +5,7 @@ coverage/
 playwright-report/
 test-results/
 tests/e2e/.auth/
+.claude/last-session-state.md
 .env
 .env.local
 .env.*.local
