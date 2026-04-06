@@ -60,27 +60,13 @@ export default defineConfig({
 			},
 			dependencies: ["setup"],
 		},
-		{
-			name: "webkit",
-			testIgnore: /mobile-.*\.spec\.ts/,
-			use: {
-				...devices["Desktop Safari"],
-				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
-			},
-			dependencies: ["setup"],
-		},
+		// webkit/mobile-safari は除外: Next.js App Router の router.push が
+		// webkit でリダイレクト完了を正しく通知しない問題があるため
+		// See: https://github.com/shinshin4n4n/kanjou-ai/issues/182
 		{
 			name: "mobile-chrome",
 			use: {
 				...devices["Pixel 5"],
-				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
-			},
-			dependencies: ["setup"],
-		},
-		{
-			name: "mobile-safari",
-			use: {
-				...devices["iPhone 12"],
 				storageState: path.join(__dirname, "tests/e2e/.auth/storage-state.json"),
 			},
 			dependencies: ["setup"],
