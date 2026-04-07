@@ -95,6 +95,8 @@ TDD ワークフロー、自動レビュー、CI 自動修正などを含む包�
 | `{{COVERAGE_THRESHOLD}}` | カバレッジ閾値 (%) | `80` |
 | `{{PR_MAX_LINES}}` | PR 最大行数 | `300` |
 | `{{PR_MAX_FILES}}` | PR 最大ファイル数 | `10` |
+| `{{TEST_COMMAND}}` | テストコマンド（hooks 用） | `npm run test:unit` |
+| `{{SOURCE_EXT}}` | ソースファイル拡張子（hooks 用） | `ts,tsx` |
 
 ## 使い方
 

@@ -60,19 +60,27 @@ PR_MAX_LINES="${PR_MAX_LINES:-300}"
 read -r -p "PR 最大ファイル数 [10]: " PR_MAX_FILES
 PR_MAX_FILES="${PR_MAX_FILES:-10}"
 
-read -r -p "追加の Critical Rules (空行で終了、1行1ルール):" ADDITIONAL_RULES
+echo "追加の Critical Rules (1行1ルール、空行で終了):"
 ADDITIONAL_RULES_TEXT=""
 while IFS= read -r line; do
     [[ -z "$line" ]] && break
-    ADDITIONAL_RULES_TEXT="${ADDITIONAL_RULES_TEXT}\n- **${line}**"
+    ADDITIONAL_RULES_TEXT="${ADDITIONAL_RULES_TEXT}
+- **${line}**"
 done
 
-read -r -p "プロジェクト固有の Notes (空行で終了、1行1項目):" PROJECT_NOTES
+echo "プロジェクト固有の Notes (1行1項目、空行で終了):"
 PROJECT_NOTES_TEXT=""
 while IFS= read -r line; do
     [[ -z "$line" ]] && break
-    PROJECT_NOTES_TEXT="${PROJECT_NOTES_TEXT}\n- ${line}"
+    PROJECT_NOTES_TEXT="${PROJECT_NOTES_TEXT}
+- ${line}"
 done
+
+read -r -p "テストコマンド (hooks 用) [${TEST_UNIT_COMMAND}]: " TEST_COMMAND
+TEST_COMMAND="${TEST_COMMAND:-$TEST_UNIT_COMMAND}"
+
+read -r -p "ソースファイル拡張子 (hooks 用) [ts,tsx]: " SOURCE_EXT
+SOURCE_EXT="${SOURCE_EXT:-ts,tsx}"
 
 SETUP_DATE=$(date +%Y-%m-%d)
 
@@ -111,6 +119,8 @@ replace_placeholders() {
         -e "s|{{PR_MAX_LINES}}|${PR_MAX_LINES}|g" \
         -e "s|{{PR_MAX_FILES}}|${PR_MAX_FILES}|g" \
         -e "s|{{SETUP_DATE}}|${SETUP_DATE}|g" \
+        -e "s|{{TEST_COMMAND}}|${TEST_COMMAND}|g" \
+        -e "s|{{SOURCE_EXT}}|${SOURCE_EXT}|g" \
         "$file"
     rm -f "${file}.bak"
 }
@@ -136,18 +146,18 @@ mkdir -p "$TARGET_DIR/scripts"
 
 # --- CLAUDE.md ---
 cp "$SCRIPT_DIR/CLAUDE.md.template" "$TARGET_DIR/CLAUDE.md"
-# 追加ルールと Notes を置換
+# 追加ルールと Notes を置換（awk で複数行対応）
 if [[ -n "$ADDITIONAL_RULES_TEXT" ]]; then
-    sed -i.bak "s|{{ADDITIONAL_RULES}}|${ADDITIONAL_RULES_TEXT}|g" "$TARGET_DIR/CLAUDE.md"
+    awk -v replacement="$ADDITIONAL_RULES_TEXT" '{gsub(/\{\{ADDITIONAL_RULES\}\}/, replacement); print}' "$TARGET_DIR/CLAUDE.md" > "$TARGET_DIR/CLAUDE.md.tmp" && mv "$TARGET_DIR/CLAUDE.md.tmp" "$TARGET_DIR/CLAUDE.md"
 else
-    sed -i.bak "/{{ADDITIONAL_RULES}}/d" "$TARGET_DIR/CLAUDE.md"
+    grep -v '{{ADDITIONAL_RULES}}' "$TARGET_DIR/CLAUDE.md" > "$TARGET_DIR/CLAUDE.md.tmp" && mv "$TARGET_DIR/CLAUDE.md.tmp" "$TARGET_DIR/CLAUDE.md"
 fi
 if [[ -n "$PROJECT_NOTES_TEXT" ]]; then
-    sed -i.bak "s|{{PROJECT_NOTES}}|${PROJECT_NOTES_TEXT}|g" "$TARGET_DIR/CLAUDE.md"
+    awk -v replacement="$PROJECT_NOTES_TEXT" '{gsub(/\{\{PROJECT_NOTES\}\}/, replacement); print}' "$TARGET_DIR/CLAUDE.md" > "$TARGET_DIR/CLAUDE.md.tmp" && mv "$TARGET_DIR/CLAUDE.md.tmp" "$TARGET_DIR/CLAUDE.md"
 else
     sed -i.bak "s|{{PROJECT_NOTES}}|- (プロジェクト固有のメモをここに追加)|g" "$TARGET_DIR/CLAUDE.md"
+    rm -f "$TARGET_DIR/CLAUDE.md.bak"
 fi
-rm -f "$TARGET_DIR/CLAUDE.md.bak"
 replace_placeholders "$TARGET_DIR/CLAUDE.md"
 
 # --- Skills ---
@@ -171,6 +181,7 @@ replace_placeholders "$CLAUDE_DIR/rules/tdd-workflow.md"
 
 # --- settings.json ---
 cp "$SCRIPT_DIR/settings.json.template" "$CLAUDE_DIR/settings.json"
+replace_placeholders "$CLAUDE_DIR/settings.json"
 
 # --- .claudeignore ---
 cp "$SCRIPT_DIR/.claudeignore.template" "$TARGET_DIR/.claudeignore"
@@ -180,6 +191,9 @@ if [[ -d "$SCRIPT_DIR/hooks" ]]; then
     mkdir -p "$CLAUDE_DIR/hooks"
     cp "$SCRIPT_DIR"/hooks/*.sh "$CLAUDE_DIR/hooks/"
     chmod +x "$CLAUDE_DIR/hooks/"*.sh
+    for hook in "$CLAUDE_DIR/hooks/"*.sh; do
+        replace_placeholders "$hook"
+    done
 fi
 
 # --- GitHub Workflows (.template → .yml) ---
