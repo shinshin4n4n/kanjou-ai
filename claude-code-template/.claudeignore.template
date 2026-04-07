@@ -1,0 +1,25 @@
+# .claudeignore — Files excluded from Claude Code context (.gitignore syntax)
+
+# Dependencies & Build artifacts
+node_modules/
+dist/
+build/
+out/
+.next/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs & Cache
+*.log
+.turbo/
+.cache/
+
+# Secrets & Credentials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
