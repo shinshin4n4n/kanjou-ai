@@ -167,9 +167,7 @@ describe("buildTaxReliefSummary", () => {
 	});
 
 	it("YA 2025でも正しく動作する", () => {
-		const records = [
-			{ ...mkRecord("TR001", 5000), assessment_year: "2025" },
-		];
+		const records = [{ ...mkRecord("TR001", 5000), assessment_year: "2025" }];
 		const summary = buildTaxReliefSummary(records, "2025");
 		const tr001 = summary.find((s) => s.code === "TR001");
 		expect(tr001?.used).toBe(5000);
