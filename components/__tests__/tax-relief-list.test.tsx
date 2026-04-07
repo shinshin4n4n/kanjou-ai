@@ -90,8 +90,8 @@ describe("TaxReliefList", () => {
 	it("編集ボタンで編集モードに切り替わる", () => {
 		render(<TaxReliefList records={records} assessmentYear="2024" />);
 
-		const editButtons = screen.getAllByTitle("編集");
-		fireEvent.click(editButtons[0]);
+		const editButton = screen.getAllByTitle("編集")[0] as HTMLElement;
+		fireEvent.click(editButton);
 
 		expect(screen.getByDisplayValue("5000")).toBeDefined();
 	});
@@ -100,8 +100,8 @@ describe("TaxReliefList", () => {
 		mockUpdate.mockResolvedValue({ success: true, data: baseRecord });
 		render(<TaxReliefList records={records} assessmentYear="2024" />);
 
-		const editButtons = screen.getAllByTitle("編集");
-		fireEvent.click(editButtons[0]);
+		const editButton = screen.getAllByTitle("編集")[0] as HTMLElement;
+		fireEvent.click(editButton);
 
 		const amountInput = screen.getByDisplayValue("5000");
 		fireEvent.change(amountInput, { target: { value: "7000" } });
@@ -122,8 +122,8 @@ describe("TaxReliefList", () => {
 		mockDelete.mockResolvedValue({ success: true, data: null });
 		render(<TaxReliefList records={records} assessmentYear="2024" />);
 
-		const deleteButtons = screen.getAllByTitle("削除");
-		fireEvent.click(deleteButtons[0]);
+		const deleteButton = screen.getAllByTitle("削除")[0] as HTMLElement;
+		fireEvent.click(deleteButton);
 
 		expect(screen.getByText("この控除記録を削除しますか？")).toBeDefined();
 
