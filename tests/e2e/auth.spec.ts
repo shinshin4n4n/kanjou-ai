@@ -9,7 +9,7 @@ test.describe("Authentication", () => {
 
 		await expect(page.locator("#login-email")).toBeVisible();
 		await expect(page.locator("#login-password")).toBeVisible();
-		await expect(page.getByRole("button", { name: "ログイン" })).toBeVisible();
+		await expect(page.getByRole("button", { name: "ログイン", exact: true })).toBeVisible();
 	});
 
 	test("should login and redirect to dashboard", async ({ page }) => {
@@ -25,7 +25,7 @@ test.describe("Authentication", () => {
 
 		await page.locator("#login-email").fill(email);
 		await page.locator("#login-password").fill(password);
-		await page.getByRole("button", { name: "ログイン" }).click();
+		await page.getByRole("button", { name: "ログイン", exact: true }).click();
 
 		await page.waitForURL("**/dashboard");
 		await expect(page).toHaveURL(/\/dashboard/);
