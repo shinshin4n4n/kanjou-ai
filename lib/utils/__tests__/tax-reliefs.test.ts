@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-	TAX_RELIEF_CATEGORIES,
-	TAX_RELIEF_LIMITS,
-	type TaxReliefCode,
 	type AssessmentYear,
 	getTaxReliefLimit,
 	getTaxReliefsByYear,
+	TAX_RELIEF_CATEGORIES,
+	TAX_RELIEF_LIMITS,
+	type TaxReliefCode,
 } from "@/lib/utils/tax-reliefs";
 
 describe("TAX_RELIEF_CATEGORIES", () => {
@@ -17,7 +17,7 @@ describe("TAX_RELIEF_CATEGORIES", () => {
 	});
 
 	it("each category should have name and category fields", () => {
-		for (const [code, cat] of Object.entries(TAX_RELIEF_CATEGORIES)) {
+		for (const [_code, cat] of Object.entries(TAX_RELIEF_CATEGORIES)) {
 			expect(cat.name).toBeTruthy();
 			expect(typeof cat.name).toBe("string");
 			expect(cat.category).toBeTruthy();
@@ -55,8 +55,8 @@ describe("TAX_RELIEF_LIMITS", () => {
 	});
 
 	it("all limits should be positive integers", () => {
-		for (const [ya, limits] of Object.entries(TAX_RELIEF_LIMITS)) {
-			for (const [code, limit] of Object.entries(limits)) {
+		for (const [_ya, limits] of Object.entries(TAX_RELIEF_LIMITS)) {
+			for (const [_code, limit] of Object.entries(limits)) {
 				expect(limit).toBeGreaterThan(0);
 				expect(Number.isInteger(limit)).toBe(true);
 			}
@@ -64,7 +64,7 @@ describe("TAX_RELIEF_LIMITS", () => {
 	});
 
 	it("every category code in limits should exist in TAX_RELIEF_CATEGORIES", () => {
-		for (const [ya, limits] of Object.entries(TAX_RELIEF_LIMITS)) {
+		for (const [_ya, limits] of Object.entries(TAX_RELIEF_LIMITS)) {
 			for (const code of Object.keys(limits)) {
 				expect(TAX_RELIEF_CATEGORIES[code as TaxReliefCode]).toBeDefined();
 			}
