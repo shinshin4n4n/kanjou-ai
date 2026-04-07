@@ -85,12 +85,40 @@ export type TaxReliefItem = {
 	limit: number;
 };
 
+export type TaxReliefSummaryItem = TaxReliefItem & {
+	used: number;
+	claimable: number;
+	percentage: number;
+	exceeded: boolean;
+};
+
 /**
  * 指定コード・年度の控除上限額を取得
  * 無効なコード/年度の場合は 0 を返す
  */
 export function getTaxReliefLimit(code: TaxReliefCode, year: AssessmentYear): number {
 	return TAX_RELIEF_LIMITS[year]?.[code] ?? 0;
+}
+
+/**
+ * 控除記録を集計し、各項目のサマリーを生成する
+ */
+export function buildTaxReliefSummary(
+	records: { relief_code: string; amount: number }[],
+	year: AssessmentYear,
+): TaxReliefSummaryItem[] {
+	const usedMap = new Map<string, number>();
+	for (const r of records) {
+		usedMap.set(r.relief_code, (usedMap.get(r.relief_code) ?? 0) + r.amount);
+	}
+
+	return getTaxReliefsByYear(year).map((item) => {
+		const used = usedMap.get(item.code) ?? 0;
+		const exceeded = used > item.limit;
+		const claimable = Math.min(used, item.limit);
+		const percentage = item.limit > 0 ? Math.min((used / item.limit) * 100, 100) : 0;
+		return { ...item, used, claimable, percentage, exceeded };
+	});
 }
 
 /**
