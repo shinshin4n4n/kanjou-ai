@@ -17,3 +17,4 @@ supabase/.temp/
 .vercel
 tmp/
 .lighthouseci/
+.worktrees/
