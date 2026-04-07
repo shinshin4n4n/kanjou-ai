@@ -11,9 +11,9 @@ vi.mock("@/app/_actions/auth", () => ({
 	signInWithGoogle: vi.fn(),
 }));
 
+import { useRouter } from "next/navigation";
 import { signInWithGoogle } from "@/app/_actions/auth";
 import LoginPage from "@/app/login/page";
-import { useRouter } from "next/navigation";
 
 const mockPush = vi.fn();
 const mockSignInWithGoogle = vi.mocked(signInWithGoogle);

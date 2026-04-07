@@ -33,17 +33,16 @@ describe("GET /auth/callback", () => {
 
 		expect(mockExchangeCodeForSession).toHaveBeenCalledWith("valid-code");
 		expect(response.status).toBe(307);
-		expect(new URL(response.headers.get("location")!).pathname).toBe("/dashboard");
+		const locationHeader = response.headers.get("location") ?? "";
+		expect(new URL(locationHeader).pathname).toBe("/dashboard");
 	});
 
 	it("codeパラメータがない場合はログインページへリダイレクトする", async () => {
-		const response = await GET(
-			createRequest("http://localhost:3000/auth/callback"),
-		);
+		const response = await GET(createRequest("http://localhost:3000/auth/callback"));
 
 		expect(mockExchangeCodeForSession).not.toHaveBeenCalled();
 		expect(response.status).toBe(307);
-		const location = new URL(response.headers.get("location")!);
+		const location = new URL(response.headers.get("location") ?? "");
 		expect(location.pathname).toBe("/login");
 		expect(location.searchParams.get("error")).toBe("auth_callback_error");
 	});
@@ -59,7 +58,7 @@ describe("GET /auth/callback", () => {
 		);
 
 		expect(response.status).toBe(307);
-		const location = new URL(response.headers.get("location")!);
+		const location = new URL(response.headers.get("location") ?? "");
 		expect(location.pathname).toBe("/login");
 		expect(location.searchParams.get("error")).toBe("auth_callback_error");
 	});
