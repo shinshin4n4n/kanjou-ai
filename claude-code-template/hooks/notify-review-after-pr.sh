@@ -3,6 +3,12 @@
 set -euo pipefail
 
 INPUT=$(cat)
+
+# Require jq for JSON parsing; exit silently if unavailable
+if ! command -v jq &>/dev/null; then
+  exit 0
+fi
+
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 

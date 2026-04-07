@@ -4,7 +4,7 @@
 set -euo pipefail
 
 TEST_CMD="{{TEST_COMMAND}}"        # e.g. "npm run test:unit"
-FILE_PATTERN='\.(__TEST_EXT__)$'   # e.g. '\.(ts|tsx)$' or '\.(py)$'
+FILE_PATTERN='\.(__{{SOURCE_EXT}})$'   # e.g. '\.(ts|tsx)$' or '\.(py)$'
 
 # Read stdin JSON and check stop_hook_active flag (infinite loop prevention)
 STDIN=$(cat)

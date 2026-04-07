@@ -1,5 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # PreCompact hook: Saves session state before context compaction
+set -euo pipefail
+
+# Consume stdin (Claude Code hooks pass JSON via stdin)
+cat > /dev/null
+
 OUTPUT_FILE="$CLAUDE_PROJECT_DIR/.claude/last-session-state.md"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 BRANCH=$(git -C "$CLAUDE_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
