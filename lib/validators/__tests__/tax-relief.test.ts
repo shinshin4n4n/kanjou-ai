@@ -50,6 +50,27 @@ describe("createTaxReliefSchema", () => {
 		expect(result.success).toBe(false);
 	});
 
+	it("小数の金額を拒否", () => {
+		const result = createTaxReliefSchema.safeParse({ ...validInput, amount: 5000.5 });
+		expect(result.success).toBe(false);
+	});
+
+	it("上限超過の金額を拒否", () => {
+		const result = createTaxReliefSchema.safeParse({
+			...validInput,
+			amount: 1_000_000_000,
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("存在しない日付を拒否", () => {
+		const result = createTaxReliefSchema.safeParse({
+			...validInput,
+			receipt_date: "2024-99-99",
+		});
+		expect(result.success).toBe(false);
+	});
+
 	it("無効な日付形式を拒否", () => {
 		const result = createTaxReliefSchema.safeParse({ ...validInput, receipt_date: "2024/06/15" });
 		expect(result.success).toBe(false);
