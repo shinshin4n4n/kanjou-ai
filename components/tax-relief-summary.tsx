@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertTriangle } from "lucide-react";
 import type { TaxReliefSummaryItem } from "@/lib/utils/tax-reliefs";
 import { Progress } from "./ui/progress";
@@ -18,7 +16,7 @@ export function TaxReliefSummary({ items }: Props) {
 					<div className="flex items-center justify-between text-sm">
 						<span className="font-medium">{item.name}</span>
 						<span>
-							RM {item.used.toLocaleString()} / {item.limit.toLocaleString()}
+							RM {item.used.toLocaleString("en-MY")} / {item.limit.toLocaleString("en-MY")}
 						</span>
 					</div>
 					<Progress
@@ -28,14 +26,14 @@ export function TaxReliefSummary({ items }: Props) {
 					{item.exceeded && (
 						<p className="flex items-center gap-1 text-xs text-destructive">
 							<AlertTriangle className="size-3" />
-							上限超過: RM {(item.used - item.limit).toLocaleString()} 超過
+							上限超過: RM {(item.used - item.limit).toLocaleString("en-MY")} 超過
 						</p>
 					)}
 				</div>
 			))}
 			<div className="rounded-lg border bg-muted/30 p-4">
 				<p className="text-sm font-medium">Form B 控除額合計</p>
-				<p className="text-2xl font-bold">RM {totalClaimable.toLocaleString()}</p>
+				<p className="text-2xl font-bold">RM {totalClaimable.toLocaleString("en-MY")}</p>
 			</div>
 		</div>
 	);
