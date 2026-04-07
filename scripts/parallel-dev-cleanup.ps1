@@ -21,6 +21,17 @@ git worktree list
 if (Test-Path $worktreeBase) {
     $dirs = Get-ChildItem -Path $worktreeBase -Directory
     foreach ($dir in $dirs) {
+        # Check for uncommitted changes
+        $status = git -C $dir.FullName status --porcelain 2>&1
+        if ($status) {
+            Write-Warning "Worktree '$($dir.FullName)' has uncommitted changes:"
+            Write-Host $status
+            $confirm = Read-Host "Remove anyway? (y/N)"
+            if ($confirm -ne "y") {
+                Write-Host "Skipped: $($dir.FullName)" -ForegroundColor Yellow
+                continue
+            }
+        }
         Write-Host "Removing worktree: $($dir.FullName)" -ForegroundColor Yellow
         git worktree remove $dir.FullName --force
     }

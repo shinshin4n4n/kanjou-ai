@@ -23,6 +23,16 @@ if [[ "${1:-}" == "--cleanup" ]]; then
     if [[ -d "$WORKTREE_BASE" ]]; then
         for dir in "$WORKTREE_BASE"/*/; do
             [[ -d "$dir" ]] || continue
+            status=$(git -C "$dir" status --porcelain 2>&1 || true)
+            if [[ -n "$status" ]]; then
+                echo "WARNING: Worktree '$dir' has uncommitted changes:"
+                echo "$status"
+                read -r -p "Remove anyway? (y/N) " confirm
+                if [[ "$confirm" != "y" ]]; then
+                    echo "Skipped: $dir"
+                    continue
+                fi
+            fi
             echo "Removing worktree: $dir"
             git worktree remove "$dir" --force || true
         done
@@ -89,7 +99,7 @@ for issue in "${ISSUE_NUMBERS[@]}"; do
     }
 
     # Generate branch name
-    slug=$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9 -]//g' | sed 's/ \+/-/g' | cut -c1-40 | sed 's/-$//')
+    slug=$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9 -]//g' | tr -s ' ' '-' | cut -c1-40 | sed 's/-$//')
     branch_name="feature/issue-${issue}-${slug}"
 
     # Check if branch already exists

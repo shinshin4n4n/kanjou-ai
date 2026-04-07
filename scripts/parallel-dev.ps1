@@ -42,6 +42,8 @@ if (-not (Test-Path $worktreeBase)) {
 
 $jobs = @()
 
+try {
+
 foreach ($issue in $IssueNumbers) {
     Write-Host "`n=== Processing Issue #$issue ===" -ForegroundColor Cyan
 
@@ -76,8 +78,9 @@ foreach ($issue in $IssueNumbers) {
     git worktree add -b $branchName $worktreePath $mainBranch
     Write-Host "Created worktree: $worktreePath (branch: $branchName)" -ForegroundColor Green
 
-    # Log file
-    $logFile = "/tmp/claude-$issue.log"
+    # Log file (use TEMP on Windows, /tmp on Unix)
+    $logDir = if ($env:TEMP) { $env:TEMP } else { "/tmp" }
+    $logFile = Join-Path $logDir "claude-$issue.log"
 
     # Launch claude -p in background
     $prompt = "gh issue view $issue で Issue の内容を確認し、/implement の手順に従って実装してください。"
@@ -128,6 +131,9 @@ foreach ($j in $jobs) {
 Write-Host "`n=== Open PRs ===" -ForegroundColor Cyan
 gh pr list --state open --author "@me"
 
-# --- Restore API key ---
-$env:ANTHROPIC_API_KEY = $originalApiKey
 Write-Host "`nDone. Run .\scripts\parallel-dev-cleanup.ps1 to clean up worktrees." -ForegroundColor Green
+
+} finally {
+    # --- Restore API key (guaranteed even on error) ---
+    $env:ANTHROPIC_API_KEY = $originalApiKey
+}
