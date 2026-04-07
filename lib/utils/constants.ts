@@ -110,3 +110,16 @@ export const RATE_LIMITS = {
 	AI_CLASSIFY_PER_MINUTE: 10,
 	CSV_IMPORT_PER_HOUR: 5,
 } as const;
+
+/**
+ * SST (Sales and Services Tax) 閾値定義
+ * マレーシア SST Act 2018: 12ヶ月累計課税売上 RM500,000 超で登録義務
+ */
+export const SST_THRESHOLDS = {
+	REGISTRATION_REQUIRED: 500_000,
+	WARNING_RED: 480_000,
+	WARNING_YELLOW: 400_000,
+	TAXABLE_ACCOUNT: "INC001",
+	NON_TAXABLE_ACCOUNT: "INC002",
+	ROLLING_MONTHS: 12,
+} as const;
