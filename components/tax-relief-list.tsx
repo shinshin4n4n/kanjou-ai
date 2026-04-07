@@ -21,18 +21,12 @@ import {
 	AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 type TaxReliefRecord = Tables<"tax_relief_records">;
-
 function reliefName(code: string): string {
-	const cat = TAX_RELIEF_CATEGORIES[code as TaxReliefCode];
-	return cat?.name ?? code;
+	return TAX_RELIEF_CATEGORIES[code as TaxReliefCode]?.name ?? code;
 }
-
 const reliefCodes = Object.keys(TAX_RELIEF_CATEGORIES) as TaxReliefCode[];
 const DEFAULT_CODE = reliefCodes[0] ?? "TR001";
 
@@ -119,53 +113,57 @@ export function TaxReliefList({ records, assessmentYear }: TaxReliefListProps) {
 		setLoading(false);
 	}
 
+	const cancelEdit = () => {
+		setShowForm(false);
+		setEditId(null);
+		resetForm();
+	};
 	const formRow = (
 		<TableRow>
 			<TableCell>
-				<Select value={reliefCode} onValueChange={setReliefCode}>
-					<SelectTrigger className="w-48">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						{reliefCodes.map((code) => (
-							<SelectItem key={code} value={code}>
-								{TAX_RELIEF_CATEGORIES[code].name}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+				<select
+					value={reliefCode}
+					onChange={(e) => setReliefCode(e.target.value)}
+					className="rounded border px-2 py-1 text-sm"
+				>
+					{reliefCodes.map((c) => (
+						<option key={c} value={c}>
+							{TAX_RELIEF_CATEGORIES[c].name}
+						</option>
+					))}
+				</select>
 			</TableCell>
 			<TableCell>
-				<Label htmlFor="tax-relief-amount" className="sr-only">
+				<label htmlFor="tax-relief-amount" className="sr-only">
 					金額
-				</Label>
-				<Input
+				</label>
+				<input
 					id="tax-relief-amount"
 					type="number"
 					value={amount}
 					onChange={(e) => setAmount(e.target.value)}
 					placeholder="金額"
-					className="w-28"
+					className="w-28 rounded border px-2 py-1 text-sm"
 				/>
 			</TableCell>
 			<TableCell>
-				<Label htmlFor="tax-relief-date" className="sr-only">
+				<label htmlFor="tax-relief-date" className="sr-only">
 					日付
-				</Label>
-				<Input
+				</label>
+				<input
 					id="tax-relief-date"
 					type="date"
 					value={receiptDate}
 					onChange={(e) => setReceiptDate(e.target.value)}
-					className="w-36"
+					className="w-36 rounded border px-2 py-1 text-sm"
 				/>
 			</TableCell>
 			<TableCell>
-				<Input
+				<input
 					value={description}
 					onChange={(e) => setDescription(e.target.value)}
 					placeholder="説明（任意）"
-					className="w-40"
+					className="w-40 rounded border px-2 py-1 text-sm"
 				/>
 			</TableCell>
 			<TableCell>
@@ -173,15 +171,7 @@ export function TaxReliefList({ records, assessmentYear }: TaxReliefListProps) {
 					<Button size="sm" onClick={handleSave} disabled={loading}>
 						保存
 					</Button>
-					<Button
-						size="sm"
-						variant="ghost"
-						onClick={() => {
-							setShowForm(false);
-							setEditId(null);
-							resetForm();
-						}}
-					>
+					<Button size="sm" variant="ghost" onClick={cancelEdit}>
 						キャンセル
 					</Button>
 				</div>
