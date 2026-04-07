@@ -10,6 +10,10 @@ concurrency:
   group: ci-auto-fix-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: true
 
+env:
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
+
 jobs:
   auto-fix:
     name: Auto Fix CI Failures
@@ -32,7 +36,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const runId = context.payload.workflow_run.id;
             const { data: prs } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -50,6 +53,7 @@ jobs:
       # 2. bot コミットによる再トリガーを防止
       # --------------------------------------------------
       - name: Check last commit author
+        if: steps.pr.outcome == 'success'
         id: check-author
         uses: actions/github-script@v7
         with:
@@ -62,7 +66,13 @@ jobs:
               per_page: 1,
             });
             const lastCommitMessage = commits[0].commit.message;
-            if (lastCommitMessage.startsWith('fix: CI 失敗の自動修正')) {
+            const autoFixPatterns = [
+              'fix: CI 失敗の自動修正',
+              'fix(ci): auto-fix',
+              '[auto-fix]',
+            ];
+            const isAutoFix = autoFixPatterns.some(p => lastCommitMessage.includes(p));
+            if (isAutoFix) {
               core.setOutput('skip', 'true');
               core.info('Last commit is an auto-fix commit. Skipping to prevent loop.');
             } else {
@@ -73,7 +83,7 @@ jobs:
       # 3. 失敗ジョブのログを取得
       # --------------------------------------------------
       - name: Get failed job logs
-        if: steps.check-author.outputs.skip == 'false'
+        if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
         id: logs
         uses: actions/github-script@v7
         with:
@@ -114,19 +124,29 @@ jobs:
             core.setOutput('failed_jobs', failedJobs.map(j => j.name).join(', '));
 
       # --------------------------------------------------
-      # 4. チェックアウト
+      # 4. チェックアウト & Node.js セットアップ
       # --------------------------------------------------
       - uses: actions/checkout@v6
-        if: steps.check-author.outputs.skip == 'false'
+        if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
         with:
           ref: ${{ steps.pr.outputs.branch }}
           fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
+        run: npm ci
 
       # --------------------------------------------------
       # 5. Claude Code で自動修正
       # --------------------------------------------------
       - name: Run Claude Code Auto Fix
-        if: steps.check-author.outputs.skip == 'false'
+        if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -164,7 +184,7 @@ jobs:
             Bash(git diff:*)
             Bash(git add:*)
             Bash(git commit:*)
-            Bash(git push:*)
+            Bash(git push origin HEAD)
             Bash(npm run lint)
             Bash(npm run typecheck)
             Bash(npm run test:unit)
