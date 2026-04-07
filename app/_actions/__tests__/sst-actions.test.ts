@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth", () => ({
 	requireAuth: vi.fn(),
@@ -70,9 +70,24 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 200000, original_currency: "MYR", amount: 6000000 },
-				{ credit_account: "INC001", original_amount: 150000, original_currency: "MYR", amount: 4500000 },
-				{ credit_account: "INC002", original_amount: 100000, original_currency: "MYR", amount: 3000000 },
+				{
+					credit_account: "INC001",
+					original_amount: 200000,
+					original_currency: "MYR",
+					amount: 6000000,
+				},
+				{
+					credit_account: "INC001",
+					original_amount: 150000,
+					original_currency: "MYR",
+					amount: 4500000,
+				},
+				{
+					credit_account: "INC002",
+					original_amount: 100000,
+					original_currency: "MYR",
+					amount: 3000000,
+				},
 			],
 			error: null,
 		});
@@ -90,7 +105,12 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 410000, original_currency: "MYR", amount: 12300000 },
+				{
+					credit_account: "INC001",
+					original_amount: 410000,
+					original_currency: "MYR",
+					amount: 12300000,
+				},
 			],
 			error: null,
 		});
@@ -107,7 +127,12 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 490000, original_currency: "MYR", amount: 14700000 },
+				{
+					credit_account: "INC001",
+					original_amount: 490000,
+					original_currency: "MYR",
+					amount: 14700000,
+				},
 			],
 			error: null,
 		});
@@ -124,7 +149,12 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 510000, original_currency: "MYR", amount: 15300000 },
+				{
+					credit_account: "INC001",
+					original_amount: 510000,
+					original_currency: "MYR",
+					amount: 15300000,
+				},
 			],
 			error: null,
 		});
@@ -156,7 +186,12 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 400000, original_currency: "MYR", amount: 12000000 },
+				{
+					credit_account: "INC001",
+					original_amount: 400000,
+					original_currency: "MYR",
+					amount: 12000000,
+				},
 			],
 			error: null,
 		});
@@ -173,7 +208,12 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 500000, original_currency: "MYR", amount: 15000000 },
+				{
+					credit_account: "INC001",
+					original_amount: 500000,
+					original_currency: "MYR",
+					amount: 15000000,
+				},
 			],
 			error: null,
 		});
@@ -191,7 +231,12 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: null, original_currency: null, amount: 450000 },
+				{
+					credit_account: "INC001",
+					original_amount: null,
+					original_currency: null,
+					amount: 450000,
+				},
 			],
 			error: null,
 		});
@@ -232,8 +277,18 @@ describe("getSstStatus", () => {
 		mockAuthSuccess();
 		createSupabaseMock({
 			data: [
-				{ credit_account: "INC001", original_amount: 100000, original_currency: "MYR", amount: 3000000 },
-				{ credit_account: "INC003", original_amount: 50000, original_currency: "MYR", amount: 1500000 },
+				{
+					credit_account: "INC001",
+					original_amount: 100000,
+					original_currency: "MYR",
+					amount: 3000000,
+				},
+				{
+					credit_account: "INC003",
+					original_amount: 50000,
+					original_currency: "MYR",
+					amount: 1500000,
+				},
 			],
 			error: null,
 		});
