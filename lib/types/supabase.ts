@@ -217,6 +217,53 @@ export type Database = {
 				};
 				Relationships: [];
 			};
+			tax_relief_records: {
+				Row: {
+					amount: number;
+					assessment_year: string;
+					created_at: string;
+					deleted_at: string | null;
+					description: string | null;
+					id: string;
+					receipt_date: string;
+					relief_code: string;
+					updated_at: string;
+					user_id: string;
+				};
+				Insert: {
+					amount: number;
+					assessment_year: string;
+					created_at?: string;
+					deleted_at?: string | null;
+					description?: string | null;
+					id?: string;
+					receipt_date: string;
+					relief_code: string;
+					updated_at?: string;
+					user_id: string;
+				};
+				Update: {
+					amount?: number;
+					assessment_year?: string;
+					created_at?: string;
+					deleted_at?: string | null;
+					description?: string | null;
+					id?: string;
+					receipt_date?: string;
+					relief_code?: string;
+					updated_at?: string;
+					user_id?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "tax_relief_records_user_id_fkey";
+						columns: ["user_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 			transactions: {
 				Row: {
 					ai_confidence: number | null;
