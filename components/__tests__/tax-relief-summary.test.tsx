@@ -24,8 +24,7 @@ describe("TaxReliefSummary", () => {
 		const items = [mkItem("TR001", "Individual", 9000, 5000)];
 		render(<TaxReliefSummary items={items} />);
 		expect(screen.getByText("Individual")).toBeDefined();
-		expect(screen.getByText(/5,000/)).toBeDefined();
-		expect(screen.getByText(/9,000/)).toBeDefined();
+		expect(screen.getByText(/5,000 \/ 9,000/)).toBeDefined();
 		expect(screen.getByRole("progressbar")).toBeDefined();
 	});
 
@@ -52,6 +51,6 @@ describe("TaxReliefSummary", () => {
 		const items = [mkItem("TR001", "Individual", 9000, 0)];
 		render(<TaxReliefSummary items={items} />);
 		expect(screen.getByText("Individual")).toBeDefined();
-		expect(screen.getByText(/RM 0/)).toBeDefined();
+		expect(screen.getByText(/0 \/ 9,000/)).toBeDefined();
 	});
 });
