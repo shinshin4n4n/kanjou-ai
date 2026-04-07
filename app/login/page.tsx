@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signIn, signUp } from "@/app/_actions/auth";
+import { signIn, signInWithGoogle, signUp } from "@/app/_actions/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,18 @@ export default function LoginPage() {
 	const router = useRouter();
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
+
+	async function handleGoogleSignIn() {
+		setError("");
+		setLoading(true);
+		const result = await signInWithGoogle();
+		if (result.success) {
+			window.location.href = result.data.url;
+		} else {
+			setError(result.error);
+			setLoading(false);
+		}
+	}
 
 	async function handleSubmit(formData: FormData, mode: "login" | "signup") {
 		setError("");
@@ -96,7 +108,6 @@ export default function LoginPage() {
 						</TabsContent>
 					</Tabs>
 
-					{/* TODO: Phase 6 で Google OAuth 設定後に復活（Issue #19）
 					<div className="relative my-4">
 						<div className="absolute inset-0 flex items-center">
 							<span className="w-full border-t" />
@@ -106,10 +117,15 @@ export default function LoginPage() {
 						</div>
 					</div>
 
-					<Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+					<Button
+						type="button"
+						variant="outline"
+						className="w-full"
+						onClick={handleGoogleSignIn}
+						disabled={loading}
+					>
 						Googleでログイン
 					</Button>
-					*/}
 				</CardContent>
 			</Card>
 		</div>
