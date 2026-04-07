@@ -34,7 +34,6 @@ function reliefName(code: string): string {
 }
 
 const reliefCodes = Object.keys(TAX_RELIEF_CATEGORIES) as TaxReliefCode[];
-const defaultCode: string = reliefCodes[0] ?? "TR001";
 const DEFAULT_CODE = reliefCodes[0] ?? "TR001";
 
 interface TaxReliefListProps {
