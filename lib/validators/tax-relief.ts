@@ -3,13 +3,19 @@ import { ASSESSMENT_YEARS, TAX_RELIEF_CATEGORIES } from "@/lib/utils/tax-reliefs
 
 const reliefCodes = Object.keys(TAX_RELIEF_CATEGORIES) as [string, ...string[]];
 
-const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const amountSchema = z
+	.number()
+	.int("金額は整数で入力してください")
+	.positive("金額は正の数を入力してください")
+	.max(999_999_999, "金額が上限を超えています");
+
+const receiptDateSchema = z.string().date("日付はYYYY-MM-DD形式の有効な日付を入力してください");
 
 export const createTaxReliefSchema = z.object({
 	relief_code: z.enum(reliefCodes),
 	assessment_year: z.enum(ASSESSMENT_YEARS),
-	amount: z.number().positive("金額は正の数を入力してください"),
-	receipt_date: z.string().regex(DATE_REGEX, "日付はYYYY-MM-DD形式で入力してください"),
+	amount: amountSchema,
+	receipt_date: receiptDateSchema,
 	description: z.string().trim().max(500, "説明は500文字以内で入力してください").optional(),
 });
 
@@ -19,8 +25,8 @@ export const updateTaxReliefSchema = z.object({
 	id: z.string().uuid("無効なIDです"),
 	relief_code: z.enum(reliefCodes).optional(),
 	assessment_year: z.enum(ASSESSMENT_YEARS).optional(),
-	amount: z.number().positive("金額は正の数を入力してください").optional(),
-	receipt_date: z.string().regex(DATE_REGEX, "日付はYYYY-MM-DD形式で入力してください").optional(),
+	amount: amountSchema.optional(),
+	receipt_date: receiptDateSchema.optional(),
 	description: z.string().trim().max(500, "説明は500文字以内で入力してください").optional(),
 });
 
