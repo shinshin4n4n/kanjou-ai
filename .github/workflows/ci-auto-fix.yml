@@ -1,0 +1,176 @@
+name: CI Auto Fix
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+concurrency:
+  group: ci-auto-fix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  auto-fix:
+    name: Auto Fix CI Failures
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      !startsWith(github.event.workflow_run.head_branch, 'claude-auto-fix-ci-')
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    steps:
+      # --------------------------------------------------
+      # 1. PR 番号を取得
+      # --------------------------------------------------
+      - name: Get PR number
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`,
+              state: 'open',
+            });
+            if (prs.length === 0) {
+              core.setFailed('No open PR found for this branch');
+              return;
+            }
+            core.setOutput('number', prs[0].number);
+            core.setOutput('branch', context.payload.workflow_run.head_branch);
+
+      # --------------------------------------------------
+      # 2. bot コミットによる再トリガーを防止
+      # --------------------------------------------------
+      - name: Check last commit author
+        id: check-author
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = '${{ steps.pr.outputs.branch }}';
+            const { data: commits } = await github.rest.repos.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: branch,
+              per_page: 1,
+            });
+            const lastCommitMessage = commits[0].commit.message;
+            if (lastCommitMessage.startsWith('fix: CI 失敗の自動修正')) {
+              core.setOutput('skip', 'true');
+              core.info('Last commit is an auto-fix commit. Skipping to prevent loop.');
+            } else {
+              core.setOutput('skip', 'false');
+            }
+
+      # --------------------------------------------------
+      # 3. 失敗ジョブのログを取得
+      # --------------------------------------------------
+      - name: Get failed job logs
+        if: steps.check-author.outputs.skip == 'false'
+        id: logs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+
+            const failedJobs = jobs.jobs.filter(j => j.conclusion === 'failure');
+            let errorSummary = '';
+
+            for (const job of failedJobs) {
+              try {
+                const { data: log } = await github.rest.actions.downloadJobLogsForWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  job_id: job.id,
+                });
+                const lines = log.split('\n');
+                const errorLines = lines.filter(l =>
+                  l.includes('error') || l.includes('Error') ||
+                  l.includes('failed') || l.includes('FAIL') ||
+                  l.includes('✗') || l.includes('×')
+                ).slice(-50);
+
+                errorSummary += `\n### Job: ${job.name}\n\`\`\`\n${errorLines.join('\n')}\n\`\`\`\n`;
+              } catch (e) {
+                errorSummary += `\n### Job: ${job.name}\nログ取得失敗: ${e.message}\n`;
+              }
+            }
+
+            const truncated = errorSummary.slice(0, 10000);
+            core.setOutput('summary', truncated);
+            core.setOutput('failed_jobs', failedJobs.map(j => j.name).join(', '));
+
+      # --------------------------------------------------
+      # 4. チェックアウト
+      # --------------------------------------------------
+      - uses: actions/checkout@v6
+        if: steps.check-author.outputs.skip == 'false'
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          fetch-depth: 0
+
+      # --------------------------------------------------
+      # 5. Claude Code で自動修正
+      # --------------------------------------------------
+      - name: Run Claude Code Auto Fix
+        if: steps.check-author.outputs.skip == 'false'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          direct_prompt: |
+            CI が失敗しました。以下のエラーログを分析し、修正してください。
+
+            ## 失敗したジョブ
+            ${{ steps.logs.outputs.failed_jobs }}
+
+            ## エラーログ
+            ${{ steps.logs.outputs.summary }}
+
+            ## ルール（厳守）
+            1. **テストファイル（`*.test.*`, `*.spec.*`, `__tests__/` 配下）は絶対に変更しないこと**。テストが失敗している場合は、実装コードを修正してテストを通すこと。
+            2. 修正は最小限にすること。根本原因のみを修正し、関連しないコードは変更しない。
+            3. 修正が **5 ファイル以上** または **50 行以上** になる場合は、修正を中断し、分析結果のみを PR コメントで報告すること。
+            4. 修正完了後、以下のコマンドで検証すること:
+               - `npm run lint`
+               - `npm run typecheck`
+               - `npm run test:unit`
+               - `npm run build`
+            5. 修正コミットのメッセージは `fix: CI 失敗の自動修正` とすること。
+            6. 修正内容を PR #${{ steps.pr.outputs.number }} にコメントで報告すること。コメントには以下を含めること:
+               - 何を変更したか
+               - なぜ変更したか
+               - 検証結果
+          allowed_tools: |
+            Read
+            Glob
+            Grep
+            Edit
+            Write
+            Bash(git status)
+            Bash(git log:*)
+            Bash(git diff:*)
+            Bash(git add:*)
+            Bash(git commit:*)
+            Bash(git push:*)
+            Bash(npm run lint)
+            Bash(npm run typecheck)
+            Bash(npm run test:unit)
+            Bash(npm run build)
+            Bash(npx biome:*)
+            Bash(npx tsc:*)
+            Bash(npx vitest:*)
+            Bash(gh pr comment:*)
+          claude_args: "--max-turns 20"
