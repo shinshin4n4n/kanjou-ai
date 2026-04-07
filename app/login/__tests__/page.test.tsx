@@ -41,32 +41,19 @@ describe("LoginPage Google OAuth", () => {
 		expect(screen.getByRole("button", { name: /google/i })).toBeInTheDocument();
 	});
 
-	it("Googleログインボタンクリックで認証URLにリダイレクトする", async () => {
+	it("GoogleログインボタンクリックでsignInWithGoogleが呼ばれる", async () => {
 		const mockUrl = "https://accounts.google.com/o/oauth2/auth?client_id=xxx";
 		mockSignInWithGoogle.mockResolvedValue({
 			success: true,
 			data: { url: mockUrl },
 		});
 
-		// window.location.href のモック
-		const locationSpy = vi.spyOn(window, "location", "get").mockReturnValue({
-			...window.location,
-			href: "",
-		});
-		const hrefSetter = vi.fn();
-		Object.defineProperty(window.location, "href", {
-			set: hrefSetter,
-			configurable: true,
-		});
-
 		render(<LoginPage />);
 		fireEvent.click(screen.getByRole("button", { name: /google/i }));
 
 		await waitFor(() => {
-			expect(mockSignInWithGoogle).toHaveBeenCalled();
+			expect(mockSignInWithGoogle).toHaveBeenCalledOnce();
 		});
-
-		locationSpy.mockRestore();
 	});
 
 	it("Google OAuth エラー時にエラーメッセージを表示する", async () => {
