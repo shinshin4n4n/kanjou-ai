@@ -47,7 +47,11 @@ export async function getSstStatus(): Promise<ApiResponse<SstStatus>> {
 		let nonTaxableTotal = 0;
 
 		for (const tx of transactions ?? []) {
-			const amount = (tx.original_amount ?? tx.amount) as number;
+			// SST閾値はMYR単位のため、MYR以外の通貨の取引はスキップ
+			const currency = (tx.original_currency as string | null) ?? "MYR";
+			if (currency !== "MYR") continue;
+
+			const amount = Number(tx.original_amount ?? tx.amount) || 0;
 
 			if (tx.credit_account === SST_THRESHOLDS.TAXABLE_ACCOUNT) {
 				taxableTotal += amount;

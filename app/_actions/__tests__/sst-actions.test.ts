@@ -301,4 +301,38 @@ describe("getSstStatus", () => {
 		expect(result.data.taxableTotal).toBe(100000);
 		expect(result.data.nonTaxableTotal).toBe(0);
 	});
+
+	it("MYR以外の通貨の取引はSST集計から除外される", async () => {
+		mockAuthSuccess();
+		createSupabaseMock({
+			data: [
+				{
+					credit_account: "INC001",
+					original_amount: 200000,
+					original_currency: "MYR",
+					amount: 6000000,
+				},
+				{
+					credit_account: "INC001",
+					original_amount: 5000,
+					original_currency: "USD",
+					amount: 750000,
+				},
+				{
+					credit_account: "INC002",
+					original_amount: 3000,
+					original_currency: "SGD",
+					amount: 330000,
+				},
+			],
+			error: null,
+		});
+
+		const result = await getSstStatus();
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		expect(result.data.taxableTotal).toBe(200000);
+		expect(result.data.nonTaxableTotal).toBe(0);
+	});
 });
