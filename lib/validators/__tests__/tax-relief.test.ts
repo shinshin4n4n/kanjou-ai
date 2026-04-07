@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
 	createTaxReliefSchema,
-	updateTaxReliefSchema,
 	deleteTaxReliefSchema,
 	getTaxReliefsSchema,
+	updateTaxReliefSchema,
 } from "@/lib/validators/tax-relief";
 
 const validInput = {
@@ -56,7 +56,10 @@ describe("createTaxReliefSchema", () => {
 	});
 
 	it("descriptionが500文字超で拒否", () => {
-		const result = createTaxReliefSchema.safeParse({ ...validInput, description: "あ".repeat(501) });
+		const result = createTaxReliefSchema.safeParse({
+			...validInput,
+			description: "あ".repeat(501),
+		});
 		expect(result.success).toBe(false);
 	});
 
