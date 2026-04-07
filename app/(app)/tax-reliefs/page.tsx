@@ -1,8 +1,13 @@
 import { redirect } from "next/navigation";
 import { getTaxReliefs } from "@/app/_actions/tax-relief-actions";
 import { TaxReliefList } from "@/components/tax-relief-list";
+import { TaxReliefSummary } from "@/components/tax-relief-summary";
 import { getUser } from "@/lib/auth";
-import { ASSESSMENT_YEARS } from "@/lib/utils/tax-reliefs";
+import {
+	ASSESSMENT_YEARS,
+	type AssessmentYear,
+	buildTaxReliefSummary,
+} from "@/lib/utils/tax-reliefs";
 
 interface PageProps {
 	searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -52,6 +57,10 @@ export default async function TaxReliefsPage({ searchParams }: PageProps) {
 					))}
 				</div>
 			</div>
+
+			<TaxReliefSummary
+				items={buildTaxReliefSummary(result.data, assessmentYear as AssessmentYear)}
+			/>
 
 			<TaxReliefList records={result.data} assessmentYear={assessmentYear} />
 		</div>
