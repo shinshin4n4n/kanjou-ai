@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
 	createTaxRelief,
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function TaxReliefList({ records, assessmentYear }: Props) {
+	const router = useRouter();
 	const [mode, setMode] = useState<string>("idle");
 	const [loading, setLoading] = useState(false);
 	const { toast } = useToast();
@@ -78,6 +80,7 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 		if (result.success) {
 			toast({ title: isEdit ? "更新しました" : "追加しました" });
 			cancel();
+			router.refresh();
 		} else {
 			toast({ title: "失敗しました", description: result.error, variant: "destructive" });
 		}
@@ -88,8 +91,12 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 		if (!window.confirm("この控除記録を削除しますか？")) return;
 		setLoading(true);
 		const result = await deleteTaxRelief(id);
-		if (result.success) toast({ title: "削除しました" });
-		else toast({ title: "削除に失敗しました", description: result.error, variant: "destructive" });
+		if (result.success) {
+			toast({ title: "削除しました" });
+			router.refresh();
+		} else {
+			toast({ title: "削除に失敗しました", description: result.error, variant: "destructive" });
+		}
 		setLoading(false);
 	}
 
@@ -119,6 +126,8 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 				<input
 					id="tax-relief-amount"
 					type="number"
+					min="1"
+					required
 					value={amt}
 					onChange={(e) => setAmt(e.target.value)}
 					className={inputCls}
@@ -131,6 +140,7 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 				<input
 					id="tax-relief-date"
 					type="date"
+					required
 					value={date}
 					onChange={(e) => setDate(e.target.value)}
 					className={inputCls}

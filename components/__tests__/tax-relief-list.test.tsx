@@ -8,6 +8,10 @@ const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
 
+const mockRefresh = vi.fn();
+vi.mock("next/navigation", () => ({
+	useRouter: () => ({ refresh: mockRefresh }),
+}));
 vi.mock("@/app/_actions/tax-relief-actions", () => ({
 	createTaxRelief: (...args: unknown[]) => mockCreate(...args),
 	updateTaxRelief: (...args: unknown[]) => mockUpdate(...args),
@@ -111,6 +115,43 @@ describe("TaxReliefList", () => {
 		expect(screen.getByLabelText("金額")).toBeDefined();
 		fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
 		expect(screen.queryByLabelText("金額")).toBeNull();
+	});
+
+	it("追加成功後にrouter.refreshが呼ばれる", async () => {
+		mockCreate.mockResolvedValue({ success: true, data: base });
+		render(<TaxReliefList records={[]} assessmentYear="2024" />);
+		fireEvent.click(screen.getByRole("button", { name: "追加" }));
+		fireEvent.change(screen.getByLabelText("金額"), { target: { value: "5000" } });
+		fireEvent.change(screen.getByLabelText("日付"), { target: { value: "2024-06-15" } });
+		fireEvent.click(screen.getByRole("button", { name: "保存" }));
+		await waitFor(() => {
+			expect(mockRefresh).toHaveBeenCalled();
+		});
+	});
+
+	it("削除成功後にrouter.refreshが呼ばれる", async () => {
+		mockDelete.mockResolvedValue({ success: true, data: null });
+		vi.spyOn(window, "confirm").mockReturnValue(true);
+		render(<TaxReliefList records={records} assessmentYear="2024" />);
+		fireEvent.click(screen.getAllByTitle("削除")[0] as HTMLElement);
+		await waitFor(() => {
+			expect(mockRefresh).toHaveBeenCalled();
+		});
+		vi.mocked(window.confirm).mockRestore();
+	});
+
+	it("金額が空の場合は保存ボタンが無効になる", () => {
+		render(<TaxReliefList records={[]} assessmentYear="2024" />);
+		fireEvent.click(screen.getByRole("button", { name: "追加" }));
+		fireEvent.change(screen.getByLabelText("日付"), { target: { value: "2024-06-15" } });
+		expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+	});
+
+	it("日付が空の場合は保存ボタンが無効になる", () => {
+		render(<TaxReliefList records={[]} assessmentYear="2024" />);
+		fireEvent.click(screen.getByRole("button", { name: "追加" }));
+		fireEvent.change(screen.getByLabelText("金額"), { target: { value: "5000" } });
+		expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
 	});
 
 	it("Server Action失敗時にtoastが呼ばれる", async () => {
