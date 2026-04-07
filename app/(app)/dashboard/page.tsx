@@ -4,6 +4,8 @@ import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDashboardData } from "@/app/_actions/dashboard-actions";
+import { getSstStatus } from "@/app/_actions/sst-actions";
+import { SstBanner } from "@/components/sst-banner";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -44,7 +46,10 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mon
 	const nextMonth = format(addMonths(monthDate, 1), "yyyy-MM");
 	const monthLabel = format(monthDate, "yyyy年M月", { locale: ja });
 
-	const result = await getDashboardData({ month: currentMonth });
+	const [result, sstResult] = await Promise.all([
+		getDashboardData({ month: currentMonth }),
+		getSstStatus(),
+	]);
 
 	if (!result.success) {
 		return (
@@ -86,6 +91,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mon
 					</Link>
 				</div>
 			</div>
+
+			{/* SST Warning Banner */}
+			{sstResult.success && <SstBanner data={sstResult.data} />}
 
 			{/* Monthly Summary Cards */}
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
