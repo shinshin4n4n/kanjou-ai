@@ -15,7 +15,7 @@ import { Button } from "./ui/button";
 type TaxReliefRecord = Tables<"tax_relief_records">;
 const CODES = Object.keys(TAX_RELIEF_CATEGORIES) as TaxReliefCode[];
 const DEFAULT_CODE = CODES[0] ?? "TR001";
-const name = (c: string) => TAX_RELIEF_CATEGORIES[c as TaxReliefCode]?.name ?? c;
+const reliefLabel = (c: string) => TAX_RELIEF_CATEGORIES[c as TaxReliefCode]?.name ?? c;
 const inputCls = "w-full rounded border px-2 py-1 text-sm bg-background";
 
 interface Props {
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function TaxReliefList({ records, assessmentYear }: Props) {
-	const [mode, setMode] = useState<"idle" | "add" | string>("idle");
+	const [mode, setMode] = useState<string>("idle");
 	const [loading, setLoading] = useState(false);
 	const { toast } = useToast();
 	const [code, setCode] = useState<string>(DEFAULT_CODE);
@@ -54,7 +54,10 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 		setMode(r.id);
 	};
 
+	const canSave = amt !== "" && Number(amt) > 0 && date !== "";
+
 	async function handleSave() {
+		if (!canSave) return;
 		setLoading(true);
 		const isEdit = mode !== "add";
 		const result = isEdit
@@ -145,7 +148,7 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 				/>
 			</div>
 			<div className="col-span-2 flex gap-2 sm:col-span-4">
-				<Button size="sm" onClick={handleSave} disabled={loading}>
+				<Button size="sm" onClick={handleSave} disabled={loading || !canSave}>
 					保存
 				</Button>
 				<Button size="sm" variant="ghost" onClick={cancel}>
@@ -180,7 +183,7 @@ export function TaxReliefList({ records, assessmentYear }: Props) {
 						) : (
 							<div key={r.id} className="flex items-center justify-between gap-4 px-4 py-3">
 								<div className="min-w-0 flex-1">
-									<p className="truncate text-sm font-medium">{name(r.relief_code)}</p>
+									<p className="truncate text-sm font-medium">{reliefLabel(r.relief_code)}</p>
 									<p className="text-xs text-muted-foreground">
 										{r.receipt_date}
 										{r.description ? ` - ${r.description}` : ""}
