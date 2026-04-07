@@ -26,7 +26,7 @@ export function SstBanner({ data }: { data: SstStatus }) {
 
 	const config = ALERT_CONFIG[data.alertLevel];
 	const Icon = config.icon;
-	const remaining = SST_THRESHOLDS.REGISTRATION_REQUIRED - data.taxableTotal;
+	const remaining = Math.max(0, SST_THRESHOLDS.REGISTRATION_REQUIRED - data.taxableTotal);
 
 	return (
 		<Alert className={config.className} data-testid="sst-banner">
