@@ -15,7 +15,7 @@ setup("authenticate", async ({ page }) => {
 
 	await page.locator("#login-email").fill(email);
 	await page.locator("#login-password").fill(password);
-	await page.getByRole("button", { name: "ログイン" }).click();
+	await page.getByRole("button", { name: "ログイン", exact: true }).click();
 
 	await page.waitForURL("**/dashboard");
 	await expect(page).toHaveURL(/\/dashboard/);
