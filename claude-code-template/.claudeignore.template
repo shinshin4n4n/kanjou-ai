@@ -1,0 +1,40 @@
+# .claudeignore
+# Files and directories excluded from Claude Code context.
+# Uses .gitignore syntax.
+# Purpose: Maximize context window utilization and maintain session quality.
+
+# -------------------------------------------------------------------
+# Dependencies & Build artifacts
+# Large directories that Claude does not need to reference directly
+# -------------------------------------------------------------------
+node_modules/
+dist/
+build/
+out/
+.next/
+
+# -------------------------------------------------------------------
+# Lock files
+# Auto-generated files not directly edited. Consume large context.
+# -------------------------------------------------------------------
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# -------------------------------------------------------------------
+# Logs & Cache
+# Runtime-generated files with low contribution to development support
+# -------------------------------------------------------------------
+*.log
+.turbo/
+.cache/
+
+# -------------------------------------------------------------------
+# Secrets & Credentials
+# Environment variables and secret keys must NEVER be included in context
+# -------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
