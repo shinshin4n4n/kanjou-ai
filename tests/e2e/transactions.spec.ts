@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Transactions", () => {
-	const testDescription = `E2Eテスト取引 ${Date.now()}`;
-	// Use today's date so the transaction appears on page 1 (default sort: transaction_date DESC)
-	const today = new Date().toISOString().split("T")[0] as string;
-
 	test("should create a new transaction", async ({ page }) => {
+		const testDescription = `E2Eテスト取引 ${Date.now()}`;
+		// Use today's date so the transaction appears on page 1 (default sort: transaction_date DESC)
+		const today = new Date().toISOString().split("T")[0] as string;
+
 		await page.goto("/transactions/new");
 
 		await page.locator("#transactionDate").fill(today);
@@ -34,10 +34,11 @@ test.describe("Transactions", () => {
 		await Promise.race([redirected, errorShown]);
 		await expect(page).toHaveURL(/\/transactions/);
 
-		// Wait for revalidation and reload to ensure fresh data
-		await page.reload({ waitUntil: "networkidle" });
+		// Navigate to transactions list with search filter to avoid pagination issues
+		await page.goto(`/transactions?search=${encodeURIComponent(testDescription)}`);
+		await page.waitForLoadState("networkidle");
 
-		// Verify the created transaction appears in the list
+		// Verify the created transaction appears in the filtered list
 		await expect(page.getByText(testDescription)).toBeVisible({ timeout: 15000 });
 
 		// Cleanup: delete the created test transaction
