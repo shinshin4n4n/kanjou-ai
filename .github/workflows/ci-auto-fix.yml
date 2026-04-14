@@ -33,7 +33,7 @@ jobs:
       # --------------------------------------------------
       - name: Get PR number
         id: pr
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: prs } = await github.rest.pulls.list({
@@ -55,7 +55,7 @@ jobs:
       - name: Check last commit author
         if: steps.pr.outcome == 'success'
         id: check-author
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const branch = '${{ steps.pr.outputs.branch }}';
@@ -85,7 +85,7 @@ jobs:
       - name: Get failed job logs
         if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
         id: logs
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const runId = context.payload.workflow_run.id;
