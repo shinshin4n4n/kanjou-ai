@@ -126,7 +126,7 @@ jobs:
       # --------------------------------------------------
       # 4. チェックアウト & Node.js セットアップ
       # --------------------------------------------------
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.pr.outcome == 'success' && steps.check-author.outputs.skip == 'false'
         with:
           ref: ${{ steps.pr.outputs.branch }}
